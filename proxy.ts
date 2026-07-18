@@ -8,7 +8,7 @@ const isProtectedRoute = createRouteMatcher([
   "/order(.*)",
 ]);
 
-// Admin routes — require admin role (checked in page/layout via Clerk metadata)
+// Admin routes — require admin role
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -17,31 +17,24 @@ export default clerkMiddleware(async (auth, req) => {
     await auth.protect();
   }
 
-  // Protect admin routes
+  // Protect admin routes — use sessionClaims (JWT) so no external API call needed
   if (isAdminRoute(req)) {
     const authObject = await auth();
     const userId = authObject.userId;
-    
+
     if (!userId) {
       const signInUrl = new URL("/sign-in", req.url);
       signInUrl.searchParams.set("redirect_url", req.url);
       return NextResponse.redirect(signInUrl);
     }
 
-    try {
-      // Import clerkClient dynamically to avoid edge runtime issues if applicable,
-      // or just rely on the server environment. 
-      // Clerk v7 allows importing it from '@clerk/nextjs/server'.
-      const { clerkClient } = await import('@clerk/nextjs/server');
-      const client = await clerkClient();
-      const user = await client.users.getUser(userId);
-      const role = user.publicMetadata?.role as string | undefined;
+    // Read role from the JWT session claims (publicMetadata is embedded here)
+    // This avoids calling clerkClient.users.getUser() which needs CLERK_SECRET_KEY
+    const role = (authObject.sessionClaims?.metadata as Record<string, string> | undefined)?.role;
 
-      if (!role || !["admin", "super_admin", "institution_staff", "support"].includes(role)) {
-        return NextResponse.redirect(new URL("/", req.url));
-      }
-    } catch (error) {
-      console.error("Error fetching user for RBAC:", error);
+    const ADMIN_ROLES = ["admin", "super_admin", "institution_staff", "support"];
+    if (!role || !ADMIN_ROLES.includes(role)) {
+      // Not an admin — redirect home instead of looping
       return NextResponse.redirect(new URL("/", req.url));
     }
   }
