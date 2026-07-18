@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /checkout
+Disallow: /account
+Disallow: /cart
+
+Sitemap: https://stitzzy.com/sitemap.xml

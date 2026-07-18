@@ -1,0 +1,273 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* ── shadcn/ui CSS Variable Tokens ──────────────────────────────────── */
+@layer base {
+  :root {
+    --background:   210 40% 98%;
+    --foreground:   222 47% 11%;
+    --card:         0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover:      0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary:      244 76% 58%;   /* brand-500 #6366F1 */
+    --primary-foreground: 0 0% 100%;
+    --secondary:    215 28% 17%;   /* ink */
+    --secondary-foreground: 0 0% 100%;
+    --muted:        214 20% 92%;
+    --muted-foreground: 215 16% 47%;
+    --accent:       217 91% 60%;   /* sky */
+    --accent-foreground: 0 0% 100%;
+    --destructive:  14 85% 47%;    /* danger #C1502E */
+    --destructive-foreground: 0 0% 100%;
+    --border:       214 32% 91%;
+    --input:        214 32% 91%;
+    --ring:         244 76% 58%;
+    --radius:       0.5rem;
+
+    /* ── Stitzzy brand tokens — used across ALL pages ── */
+    --ink:       #12203A;
+    --ink-muted: #5B6478;
+    --canvas:    #F4F6FA;
+    --canvas-2:  #EAEDF3;
+    --brass:     #B8892E;
+    --blue:      #3E63E0;
+    --rust:      #C1502E;
+  }
+
+
+  .dark {
+    --background:   222 47% 7%;
+    --foreground:   210 40% 96%;
+    --card:         222 47% 11%;
+    --card-foreground: 210 40% 96%;
+    --popover:      222 47% 11%;
+    --popover-foreground: 210 40% 96%;
+    --primary:      244 76% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary:    215 28% 18%;
+    --secondary-foreground: 210 40% 96%;
+    --muted:        215 28% 18%;
+    --muted-foreground: 215 16% 60%;
+    --accent:       217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive:  14 85% 47%;
+    --destructive-foreground: 0 0% 100%;
+    --border:       215 28% 18%;
+    --input:        215 28% 18%;
+    --ring:         244 76% 58%;
+  }
+}
+
+/* ── Global Resets ──────────────────────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-sans;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-semibold leading-tight;
+  }
+
+  /* Focus visible — accessible ring */
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar        { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track  { background: #EAEDF3; }
+  ::-webkit-scrollbar-thumb  { background: rgba(18,32,58,0.2); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(18,32,58,0.4); }
+}
+
+/* ── Stitzzy Component Classes ──────────────────────────────────────── */
+@layer components {
+
+  /* The brand-defining card component — dashed border + corner rivet */
+  .stitch-card {
+    @apply relative bg-white rounded-lg;
+    border: 1.5px dashed rgba(18, 32, 58, 0.28);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .stitch-card::before {
+    content: "";
+    @apply absolute w-2 h-2 rounded-full;
+    top: 10px;
+    left: 10px;
+    background: #F4F6FA;
+    border: 1px dashed rgba(18, 32, 58, 0.35);
+  }
+  .stitch-card:hover {
+    @apply shadow-card-hover -translate-y-0.5;
+  }
+
+  /* Eyebrow / label typography */
+  .eyebrow {
+    @apply font-mono text-[11px] tracking-[0.14em] uppercase text-brass;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply text-white font-medium rounded-lg px-5 py-2.5
+           transition-all duration-150 hover:bg-brand-600
+           disabled:opacity-40 disabled:cursor-not-allowed;
+    background-color: #12203A; /* Hardcoded to --ink to ensure visibility */
+  }
+  .btn-whatsapp {
+    @apply text-white font-medium rounded-lg px-5 py-2.5
+           transition-opacity duration-150 hover:opacity-90
+           disabled:opacity-40 disabled:cursor-not-allowed;
+    background: #25D366;
+  }
+  .btn-outline {
+    @apply border border-ink/25 text-ink font-medium rounded-lg px-5 py-2.5
+           transition-all duration-150 hover:bg-canvas-2
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  /* Size selector buttons */
+  .size-btn {
+    @apply w-12 h-12 rounded-lg font-mono text-sm border border-ink/20
+           transition-all duration-150 hover:border-ink/60;
+  }
+  .size-btn.active {
+    @apply bg-ink text-white border-ink;
+  }
+  .size-btn:disabled {
+    @apply opacity-35 line-through cursor-not-allowed;
+  }
+
+  /* Skeleton loading shimmer */
+  .skeleton {
+    @apply rounded-lg bg-canvas-2;
+    background: linear-gradient(90deg, #EAEDF3 25%, #F4F6FA 50%, #EAEDF3 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+
+  /* Tab navigation buttons */
+  .tab-btn {
+    @apply pb-3 font-mono text-xs uppercase tracking-wide text-ink-muted
+           border-b-2 border-transparent transition-colors duration-150;
+  }
+  .tab-btn.active {
+    @apply text-ink border-brand-500;
+  }
+
+  /* Badge variants */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+           font-mono text-[10px] uppercase tracking-wide;
+  }
+  .badge-live    { @apply bg-success/10 text-success; }
+  .badge-soon    { @apply bg-canvas-2 text-ink-muted; }
+  .badge-official { @apply bg-brass/10 text-brass; }
+  .badge-stock   { @apply bg-brand-50 text-brand-600; }
+
+  /* FAQ accordion ── landing page */
+  .faq-item {
+    border-bottom: 1px solid rgba(18, 32, 58, 0.12);
+  }
+  .faq-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 4px;
+    text-align: left;
+    background: transparent;
+    cursor: pointer;
+  }
+  .faq-chevron {
+    transition: transform 0.2s ease;
+  }
+  .faq-chevron.open {
+    transform: rotate(180deg);
+  }
+
+  /* Newsletter input ── footer */
+  .newsletter-input {
+    background: rgba(244, 246, 250, 0.06);
+    border: 1px solid rgba(244, 246, 250, 0.18);
+    color: #fff;
+  }
+  .newsletter-input::placeholder {
+    color: rgba(244, 246, 250, 0.4);
+  }
+
+  /* Social icon ── footer */
+  .social-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(244, 246, 250, 0.08);
+    color: rgba(244, 246, 250, 0.8);
+    transition: background 0.15s ease, color 0.15s ease;
+    text-decoration: none;
+  }
+  .social-icon:hover {
+    background: #3E63E0;
+    color: #fff;
+  }
+}
+
+/* ── Utility overrides ──────────────────────────────────────────────── */
+@layer utilities {
+  .font-display { font-family: var(--font-bricolage), 'Bricolage Grotesque', sans-serif; }
+  .font-mono-ibm { font-family: var(--font-ibm-mono), 'IBM Plex Mono', monospace; }
+
+  .text-balance { text-wrap: balance; }
+
+  /* Content visibility for below-fold performance */
+  .content-auto { content-visibility: auto; contain-intrinsic-size: 1px 1000px; }
+
+  /* Gradient text */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-tag-sway   { animation: none; }
+    .animate-shimmer    { animation: none; }
+    .animate-fade-in    { animation: none; }
+    .animate-slide-up   { animation: none; }
+    .tag-hang           { animation: none; }
+  }
+
+  /* Price tag sway — hero illustration */
+  .tag-hang {
+    animation: tagSway 5s ease-in-out infinite;
+    transform-origin: top center;
+  }
+  @keyframes tagSway {
+    0%, 100% { transform: rotate(-3deg); }
+    50%      { transform: rotate(3deg);  }
+  }
+
+  /* Shimmer keyframe */
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+}

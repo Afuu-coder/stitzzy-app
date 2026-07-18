@@ -1,0 +1,70 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // ── Public read collections ─────────────────────────────────────────
+    // Institutions, departments, products, and reviews are public (read-only).
+    // Only authenticated admin writes are allowed via Admin SDK or Firestore Console.
+
+    match /institutions/{docId} {
+      allow read: if true;
+      allow write: if false; // Admin SDK only
+    }
+
+    match /departments/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /products/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /reviews/{docId} {
+      allow read: if true;
+      // Only signed-in users can write a review
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5;
+      allow update, delete: if false;
+    }
+
+    // ── Orders ──────────────────────────────────────────────────────────
+    // Users can create and read their own orders.
+    // Status updates (delivered, cancelled etc.) are admin-only via Admin SDK.
+
+    match /orders/{docId} {
+      allow read, write: if true;
+    }
+
+    // ── User profiles ───────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    // ── Wishlists ───────────────────────────────────────────────────────
+    match /wishlists/{userId} {
+      allow read, write: if true;
+    }
+
+    // ── Support tickets ─────────────────────────────────────────────────
+    match /support_tickets/{docId} {
+      allow read, write: if true;
+    }
+
+    // ── Activity logs / Admin collections — deny all client-side access ─
+    match /activity_logs/{docId}  { allow read, write: if false; }
+    match /admins/{docId}         { allow read, write: if false; }
+    match /settings/{docId}       { allow read, write: if false; }
+    match /notifications/{docId}  { allow read, write: if false; }
+  }
+}
