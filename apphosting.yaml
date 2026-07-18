@@ -63,7 +63,7 @@ env:
 
   # Clerk Auth
   - variable: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-    secret: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+    value: "pk_live_Y2xlcmsuc3RpdHp6eS5pbiQ"
     availability:
       - BUILD
       - RUNTIME
