@@ -8,4 +8,4 @@ Disallow: /checkout
 Disallow: /account
 Disallow: /cart
 
-Sitemap: https://stitzzy.com/sitemap.xml
+Sitemap: https://stitzzy.in/sitemap.xml

@@ -1,6 +1,6 @@
 import { MetadataRoute } from "next";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://stitzzy.com";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://stitzzy.in";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static routes

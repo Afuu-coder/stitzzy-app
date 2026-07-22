@@ -12,7 +12,7 @@ const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "918473083827
 const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
   "Hi, I need help with Stitzzy.",
 )}`;
-const SUPPORT_EMAIL = "support@stitzzy.com";
+const SUPPORT_EMAIL = "support@stitzzy.in";
 
 export default function ContactPage() {
   return (

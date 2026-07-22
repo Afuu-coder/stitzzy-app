@@ -83,8 +83,8 @@ export default function StitzzyLanding() {
               "@context": "https://schema.org",
               "@type": "Organization",
               name: "Stitzzy",
-              url: "https://stitzzy.com",
-              logo: "https://stitzzy.com/logo.png",
+              url: "https://stitzzy.in",
+              logo: "https://stitzzy.in/logo.png",
               contactPoint: {
                 "@type": "ContactPoint",
                 contactType: "customer service",
@@ -100,10 +100,10 @@ export default function StitzzyLanding() {
               "@context": "https://schema.org",
               "@type": "WebSite",
               name: "Stitzzy",
-              url: "https://stitzzy.com",
+              url: "https://stitzzy.in",
               potentialAction: {
                 "@type": "SearchAction",
-                target: "https://stitzzy.com/uniforms?q={search_term_string}",
+                target: "https://stitzzy.in/uniforms?q={search_term_string}",
                 "query-input": "required name=search_term_string",
               },
             },

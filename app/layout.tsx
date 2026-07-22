@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     "Find and order your institution's official uniform online. Filtered by department, semester, and size. Confirmed on WhatsApp.",
   keywords: [
     // Brand
-    "Stitzzy", "stitzzy.com", "stitzzy uniform",
+    "Stitzzy", "stitzzy.in", "stitzzy uniform",
     // Primary
     "school uniform online India",
     "college uniform online India",
@@ -59,12 +59,17 @@ export const metadata: Metadata = {
   authors: [{ name: "Stitzzy" }],
   creator: "Stitzzy",
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://stitzzy.com"
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://stitzzy.in"
   ),
+  alternates: {
+    // Tells Google the ONE canonical URL, so web.app / firebaseapp.com copies
+    // are never indexed as duplicates.
+    canonical: "https://stitzzy.in",
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://stitzzy.com",
+    url: "https://stitzzy.in",
     siteName: "Stitzzy",
     title: "Stitzzy — Official School & College Uniforms",
     description:

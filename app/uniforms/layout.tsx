@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "All Uniforms — Stitzzy",
     description: "Browse official uniforms by institution, category and size. Order via WhatsApp.",
-    url: "https://stitzzy.com/uniforms",
+    url: "https://stitzzy.in/uniforms",
   },
 };
 
