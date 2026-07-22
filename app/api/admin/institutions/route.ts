@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { adminDb, adminStorage } from "@/lib/firebase-admin";
-
-async function verifyAdmin() {
-  const { userId } = await auth();
-  if (!userId) return false;
-  return true;
-}
+import { verifyAdmin } from "@/lib/admin-auth";
 
 export async function POST(request: Request) {
   if (!(await verifyAdmin())) {

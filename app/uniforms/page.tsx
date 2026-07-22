@@ -17,7 +17,7 @@ const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transi
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } };
 
 const CATEGORIES = ["All", "Shirt", "Trouser", "Skirt", "Blazer", "Tie", "Belt", "Shoes", "Socks", "Other"];
-const GENDERS    = ["All", "Male", "Female", "Unisex"];
+const GENDERS    = ["All", "Men", "Women", "Unisex"];
 const SORT_OPTIONS = [
   { label: "Name (A–Z)",     value: "name-asc" },
   { label: "Name (Z–A)",     value: "name-desc" },
@@ -97,9 +97,9 @@ export default function UniformsPage() {
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(p =>
-        p.name.toLowerCase().includes(q) ||
+        p.title.toLowerCase().includes(q) ||
         p.category?.toLowerCase().includes(q) ||
-        p.sku?.toLowerCase().includes(q)
+        p.sizes?.some(v => v.sku?.toLowerCase().includes(q))
       );
     }
     if (category !== "All") list = list.filter(p => p.category === category);
@@ -108,10 +108,10 @@ export default function UniformsPage() {
 
     list.sort((a, b) => {
       switch (sort) {
-        case "name-asc":   return a.name.localeCompare(b.name);
-        case "name-desc":  return b.name.localeCompare(a.name);
-        case "price-asc":  return (a.discountPrice ?? a.basePrice) - (b.discountPrice ?? b.basePrice);
-        case "price-desc": return (b.discountPrice ?? b.basePrice) - (a.discountPrice ?? a.basePrice);
+        case "name-asc":   return a.title.localeCompare(b.title);
+        case "name-desc":  return b.title.localeCompare(a.title);
+        case "price-asc":  return a.price - b.price;
+        case "price-desc": return b.price - a.price;
         default:           return 0;
       }
     });
@@ -178,8 +178,8 @@ export default function UniformsPage() {
               placeholder="Search uniforms, SKU…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border font-mono text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 placeholder:text-ink-muted/50"
-              style={{ borderColor: "rgba(18,32,58,0.15)" }}
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border font-mono text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-400 placeholder:text-ink-muted/50"
+              style={{ borderColor: "rgba(20,22,27,0.15)" }}
             />
             {search && (
               <button
@@ -196,7 +196,7 @@ export default function UniformsPage() {
             onClick={() => setShowFilters(f => !f)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-lg border font-mono text-xs uppercase tracking-wide transition-colors"
             style={{
-              borderColor: "rgba(18,32,58,0.15)",
+              borderColor: "rgba(20,22,27,0.15)",
               background: showFilters ? "var(--ink)" : "#fff",
               color: showFilters ? "#fff" : "var(--ink)",
             }}
@@ -210,8 +210,8 @@ export default function UniformsPage() {
             <select
               value={sort}
               onChange={e => setSort(e.target.value)}
-              className="appearance-none pl-3 pr-8 py-2.5 rounded-lg border font-mono text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer"
-              style={{ borderColor: "rgba(18,32,58,0.15)", color: "var(--ink)" }}
+              className="appearance-none pl-3 pr-8 py-2.5 rounded-lg border font-mono text-xs bg-white focus:outline-none focus:ring-2 focus:ring-brand-600/30 cursor-pointer"
+              style={{ borderColor: "rgba(20,22,27,0.15)", color: "var(--ink)" }}
             >
               {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
@@ -332,7 +332,7 @@ export default function UniformsPage() {
               </button>
             )}
             {products.length === 0 && (
-              <Link href="/institutions" className="font-mono text-xs text-blue-600 hover:underline flex items-center gap-1">
+              <Link href="/institutions" className="font-mono text-xs text-brand-600 hover:underline flex items-center gap-1">
                 Browse institutions
               </Link>
             )}

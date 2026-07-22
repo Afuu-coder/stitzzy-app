@@ -57,12 +57,7 @@ export default function WishlistPage() {
           >
             <AnimatePresence>
               {items.map((product, i) => {
-                const imageUrl =
-                  product.images?.[0]
-                    ? typeof product.images[0] === "string"
-                      ? product.images[0]
-                      : (product.images[0] as { url?: string }).url ?? ""
-                    : product.imageUrls?.[0] ?? "";
+                const imageUrl = product.images?.[0] ?? "";
 
                 return (
                   <motion.div
@@ -81,7 +76,7 @@ export default function WishlistPage() {
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={imageUrl}
-                          alt={product.name ?? "Product image"}
+                          alt={product.title ?? "Product image"}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
@@ -93,8 +88,8 @@ export default function WishlistPage() {
 
                       {/* Remove button */}
                       <button
-                        onClick={() => handleRemove(product.id, product.name ?? "Item")}
-                        aria-label={`Remove ${product.name ?? "item"} from wishlist`}
+                        onClick={() => handleRemove(product.id, product.title ?? "Item")}
+                        aria-label={`Remove ${product.title ?? "item"} from wishlist`}
                         className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur rounded-full
                                    flex items-center justify-center text-red-500 hover:bg-red-500
                                    hover:text-white transition-colors shadow-sm"
@@ -112,13 +107,13 @@ export default function WishlistPage() {
                         href={`/products/${product.id}`}
                         className="font-display font-semibold text-sm hover:text-blue-600 transition-colors line-clamp-2 mb-2 leading-snug"
                       >
-                        {product.name ?? "Unknown product"}
+                        {product.title ?? "Unknown product"}
                       </Link>
                       <p className="font-mono text-sm text-blue-600 font-medium mb-4">
-                        ₹{(product.discountPrice ?? product.basePrice)?.toLocaleString("en-IN")}
-                        {product.discountPrice && product.basePrice && (
+                        ₹{product.price?.toLocaleString("en-IN")}
+                        {product.mrp > product.price && (
                           <span className="line-through text-ink-muted ml-2 text-xs">
-                            ₹{product.basePrice.toLocaleString("en-IN")}
+                            ₹{product.mrp.toLocaleString("en-IN")}
                           </span>
                         )}
                       </p>
@@ -129,7 +124,7 @@ export default function WishlistPage() {
                           href={`/products/${product.id}`}
                           className="w-full btn-primary py-2 text-xs font-mono uppercase tracking-wide
                                      flex items-center justify-center gap-2"
-                          aria-label={`View ${product.name} and select size`}
+                          aria-label={`View ${product.title} and select size`}
                         >
                           <ShoppingBag size={14} aria-hidden="true" />
                           Select size &amp; add to cart

@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import {
   Package, Clock, CheckCircle2, Truck, Home,
   AlertTriangle, ArrowLeft, Loader2, MessageCircle,
@@ -68,12 +66,14 @@ export default function OrderTrackingPage() {
     if (!trackingCode) return;
     (async () => {
       try {
-        const q    = query(collection(db, "orders"), where("trackingCode", "==", trackingCode));
-        const snap = await getDocs(q);
-        if (snap.empty) {
+        const res = await fetch(`/api/orders?trackingCode=${encodeURIComponent(trackingCode)}`);
+        if (res.status === 404) {
           setError("Order not found");
+        } else if (!res.ok) {
+          setError("Could not load order details. Check your connection and try again.");
         } else {
-          setOrder({ id: snap.docs[0].id, ...(snap.docs[0].data() as Omit<Order, "id">) });
+          const data = await res.json();
+          setOrder(data as Order);
         }
       } catch {
         setError("Could not load order details. Check your connection and try again.");
@@ -86,8 +86,20 @@ export default function OrderTrackingPage() {
   /* ── Loading ── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-canvas flex items-center justify-center" aria-label="Loading order details">
-        <Loader2 size={28} className="animate-spin text-ink-muted" aria-hidden="true" />
+      <div className="min-h-screen bg-canvas" aria-label="Loading order details">
+        <div className="max-w-3xl mx-auto px-6 py-12">
+          <div className="h-4 w-24 bg-canvas-2 rounded animate-shimmer mb-8" />
+          <div className="h-8 w-56 bg-canvas-2 rounded animate-shimmer mb-2" />
+          <div className="h-4 w-40 bg-canvas-2 rounded animate-shimmer mb-10" />
+          <div className="stitch-card p-8 space-y-6">
+            {[1, 2, 3, 4].map((n) => (
+              <div key={n} className="flex items-center gap-4">
+                <div className="w-8 h-8 rounded-full bg-canvas-2 animate-shimmer" />
+                <div className="flex-1 h-4 bg-canvas-2 rounded animate-shimmer" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -101,12 +113,23 @@ export default function OrderTrackingPage() {
         <p className="font-mono text-sm text-ink-muted max-w-xs">
           {error || `We couldn't find an order with tracking code: ${trackingCode}`}
         </p>
-        <Link
-          href="/"
-          className="btn-outline font-mono text-xs px-4 py-2.5 mt-2 inline-flex items-center gap-1.5"
-        >
-          <ArrowLeft size={13} aria-hidden="true" /> Back to home
-        </Link>
+        <p className="font-mono text-xs text-ink-muted max-w-xs">
+          It may take a moment for new orders to appear. Try refreshing in a few seconds, or contact support if the issue persists.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 mt-2">
+          <button
+            onClick={() => window.location.reload()}
+            className="btn-primary font-mono text-xs px-4 py-2.5 inline-flex items-center gap-1.5"
+          >
+            Refresh page
+          </button>
+          <Link
+            href="/"
+            className="btn-outline font-mono text-xs px-4 py-2.5 inline-flex items-center gap-1.5"
+          >
+            <ArrowLeft size={13} aria-hidden="true" /> Back to home
+          </Link>
+        </div>
       </div>
     );
   }
@@ -166,7 +189,7 @@ export default function OrderTrackingPage() {
           <div className="stitch-card p-8 mb-8">
             <h2 className="font-display text-xl font-semibold mb-8">
               Status:{" "}
-              <span className="text-blue-600">
+              <span className="text-brand-600">
                 {STATUS_LABEL[order.status] ?? order.status.replace(/_/g, " ")}
               </span>
             </h2>
@@ -174,7 +197,7 @@ export default function OrderTrackingPage() {
               {/* Vertical connector */}
               <div
                 className="absolute left-6 top-0 bottom-0 w-px"
-                style={{ background: "rgba(18,32,58,0.1)" }}
+                style={{ background: "rgba(20,22,27,0.1)" }}
                 aria-hidden="true"
               />
               <div className="space-y-8">
@@ -195,8 +218,8 @@ export default function OrderTrackingPage() {
                         className={`w-12 h-12 rounded-full flex items-center justify-center z-10 shrink-0 transition-colors ${
                           isCompleted
                             ? isCurrent
-                              ? "bg-blue-600 text-white"
-                              : "bg-blue-100 text-blue-600"
+                              ? "bg-brand-600 text-white"
+                              : "bg-brand-100 text-brand-600"
                             : "bg-white border border-ink/20 text-ink-muted"
                         }`}
                         aria-hidden="true"
@@ -208,7 +231,7 @@ export default function OrderTrackingPage() {
                           {step.label}
                         </h3>
                         {isCurrent && (
-                          <p className="font-mono text-xs text-blue-600 mt-1">
+                          <p className="font-mono text-xs text-brand-600 mt-1">
                             Current status
                           </p>
                         )}
@@ -247,7 +270,7 @@ export default function OrderTrackingPage() {
               ))}
               <div className="pt-2 flex justify-between items-center font-semibold">
                 <span className="font-mono text-xs uppercase tracking-widest text-ink-muted">Total</span>
-                <span className="font-display text-lg text-blue-600">
+                <span className="font-display text-lg text-brand-600">
                   ₹{order.totalAmount?.toLocaleString("en-IN")}
                 </span>
               </div>

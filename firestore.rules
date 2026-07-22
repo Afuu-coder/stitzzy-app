@@ -3,68 +3,60 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Helper functions ────────────────────────────────────────────────
-    function isSignedIn() {
-      return request.auth != null;
-    }
+    // ─────────────────────────────────────────────────────────────────────
+    // AUTH MODEL: This app authenticates with Clerk, NOT Firebase Auth.
+    // That means request.auth is ALWAYS null in these rules — we cannot use
+    // it to gate access. Instead, every write and every read of private data
+    // goes through server-side API routes using the Firebase Admin SDK, which
+    // BYPASSES these rules entirely.
+    //
+    // Therefore the rule of thumb here is:
+    //   • Public catalog data (institutions, departments, products, reviews):
+    //     allow client READ, deny all client WRITE.
+    //   • Everything private (orders, users, wishlists, tickets, subscribers,
+    //     and all admin collections): DENY all client access. The Admin SDK
+    //     handles it server-side after verifying the Clerk session.
+    // ─────────────────────────────────────────────────────────────────────
 
-    // ── Public read collections ─────────────────────────────────────────
-    // Institutions, departments, products, and reviews are public (read-only).
-    // Only authenticated admin writes are allowed via Admin SDK or Firestore Console.
-
+    // ── Public catalog — client read-only ───────────────────────────────
     match /institutions/{docId} {
-      allow read: if true;
-      allow write: if false; // Admin SDK only
+      allow read:  if true;
+      allow write: if false;
     }
 
     match /departments/{docId} {
-      allow read: if true;
+      allow read:  if true;
       allow write: if false;
     }
 
     match /products/{docId} {
-      allow read: if true;
+      allow read:  if true;
       allow write: if false;
     }
 
     match /reviews/{docId} {
-      allow read: if true;
-      // Only signed-in users can write a review
-      allow create: if isSignedIn()
-        && request.resource.data.userId == request.auth.uid
-        && request.resource.data.rating is int
-        && request.resource.data.rating >= 1
-        && request.resource.data.rating <= 5;
-      allow update, delete: if false;
+      // Reviews are public to read. Writes (if added later) must go through
+      // an authenticated Admin SDK route, since request.auth is always null.
+      allow read:  if true;
+      allow write: if false;
     }
 
-    // ── Orders ──────────────────────────────────────────────────────────
-    // Users can create and read their own orders.
-    // Status updates (delivered, cancelled etc.) are admin-only via Admin SDK.
+    // ── Private data — no client access at all (Admin SDK only) ──────────
+    match /orders/{docId}          { allow read, write: if false; }
+    match /users/{userId}          { allow read, write: if false; }
+    match /wishlists/{userId}      { allow read, write: if false; }
+    match /support_tickets/{docId} { allow read, write: if false; }
+    match /subscribers/{docId}     { allow read, write: if false; }
 
-    match /orders/{docId} {
-      allow read, write: if true;
-    }
-
-    // ── User profiles ───────────────────────────────────────────────────
-    match /users/{userId} {
-      allow read, write: if true;
-    }
-
-    // ── Wishlists ───────────────────────────────────────────────────────
-    match /wishlists/{userId} {
-      allow read, write: if true;
-    }
-
-    // ── Support tickets ─────────────────────────────────────────────────
-    match /support_tickets/{docId} {
-      allow read, write: if true;
-    }
-
-    // ── Activity logs / Admin collections — deny all client-side access ─
+    // ── Admin / system collections — no client access ────────────────────
     match /activity_logs/{docId}  { allow read, write: if false; }
     match /admins/{docId}         { allow read, write: if false; }
     match /settings/{docId}       { allow read, write: if false; }
     match /notifications/{docId}  { allow read, write: if false; }
+
+    // ── Default deny for any collection not listed above ─────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }

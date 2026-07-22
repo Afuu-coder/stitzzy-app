@@ -38,9 +38,6 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Global navbar shown on all pages except admin
-  if (pathname.startsWith("/admin")) return null;
-
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMenuOpen(false);
@@ -49,12 +46,15 @@ export function Navbar() {
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
 
+  // Global navbar shown on all pages except admin
+  if (pathname.startsWith("/admin")) return null;
+
   return (
     <header
       className="sticky top-0 z-50 bg-canvas/95 backdrop-blur-sm transition-shadow duration-200"
       style={{
-        borderBottom: "1px solid rgba(18,32,58,0.1)",
-        boxShadow: scrolled ? "0 2px 16px rgba(18,32,58,0.07)" : "none",
+        borderBottom: "1px solid var(--border-hairline)",
+        boxShadow: scrolled ? "0 2px 16px rgba(20,22,27,0.06)" : "none",
       }}
     >
       <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-3">
@@ -175,7 +175,7 @@ export function Navbar() {
                 key={href}
                 href={href}
                 onClick={() => setMenuOpen(false)}
-                className="font-mono text-xs uppercase tracking-widest text-ink hover:text-blue-600 transition-colors"
+                className="font-mono text-xs uppercase tracking-widest text-ink hover:text-brand-600 transition-colors"
               >
                 {label}
               </Link>
@@ -184,7 +184,7 @@ export function Navbar() {
             <Link
               href="/cart"
               onClick={() => setMenuOpen(false)}
-              className="font-mono text-xs uppercase tracking-widest text-ink hover:text-blue-600 transition-colors flex items-center gap-2"
+              className="font-mono text-xs uppercase tracking-widest text-ink hover:text-brand-600 transition-colors flex items-center gap-2"
             >
               <ShoppingBag size={13} />
               Cart {mounted && totalItems > 0 && (

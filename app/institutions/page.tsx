@@ -15,7 +15,7 @@ const TYPE_LABELS: Record<Institution["type"], string> = {
 };
 
 const DEPT_COLORS = [
-  "#3E63E0", "#B8892E", "#C1502E", "#2E8B57", "#7C3AED", "#0891B2",
+  "#1B2A4A", "#B8863B", "#B23A3A", "#1F7A4D", "#3A4E7A", "#5B6478",
 ];
 
 const fadeUp = {
@@ -157,7 +157,7 @@ export default function InstitutionsPage() {
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="mt-4 font-mono text-xs text-blue-600 hover:underline"
+                className="mt-4 font-mono text-xs text-brand-600 hover:underline"
               >
                 Clear search
               </button>
@@ -212,7 +212,7 @@ export default function InstitutionsPage() {
                       <span className="badge badge-official mb-2 inline-block">
                         {TYPE_LABELS[inst.type]}
                       </span>
-                      <p className="font-display font-semibold mb-1 group-hover:text-blue-600 transition-colors">
+                      <p className="font-display font-semibold mb-1 group-hover:text-brand-600 transition-colors">
                         {inst.name}
                       </p>
                       {(inst.city || inst.state) && (
@@ -223,7 +223,7 @@ export default function InstitutionsPage() {
                       )}
                     </div>
 
-                    <div className="mt-4 flex items-center gap-1 font-mono text-xs text-blue-600 group-hover:gap-2 transition-all">
+                    <div className="mt-4 flex items-center gap-1 font-mono text-xs text-brand-600 group-hover:gap-2 transition-all">
                       Browse uniforms <ChevronRight size={12} aria-hidden="true" />
                     </div>
                   </Link>

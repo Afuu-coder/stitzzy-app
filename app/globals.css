@@ -13,29 +13,44 @@
     --card-foreground: 222 47% 11%;
     --popover:      0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary:      244 76% 58%;   /* brand-500 #6366F1 */
+    --background:   40 33% 97%;    /* surface-0 #FAF9F6 warm off-white */
+    --foreground:   225 15% 9%;    /* ink-900 #14161B */
+    --card:         0 0% 100%;
+    --card-foreground: 225 15% 9%;
+    --popover:      0 0% 100%;
+    --popover-foreground: 225 15% 9%;
+    --primary:      219 46% 20%;   /* navy-600 #1B2A4A */
     --primary-foreground: 0 0% 100%;
-    --secondary:    215 28% 17%;   /* ink */
+    --secondary:    225 15% 9%;    /* ink-900 */
     --secondary-foreground: 0 0% 100%;
-    --muted:        214 20% 92%;
-    --muted-foreground: 215 16% 47%;
-    --accent:       217 91% 60%;   /* sky */
+    --muted:        40 12% 90%;
+    --muted-foreground: 225 6% 63%; /* ink-300 #9A9DA8 */
+    --accent:       219 46% 20%;   /* navy */
     --accent-foreground: 0 0% 100%;
-    --destructive:  14 85% 47%;    /* danger #C1502E */
+    --destructive:  0 51% 47%;     /* danger #B23A3A */
     --destructive-foreground: 0 0% 100%;
-    --border:       214 32% 91%;
-    --input:        214 32% 91%;
-    --ring:         244 76% 58%;
+    --border:       40 13% 89%;    /* #E7E5DF hairline */
+    --input:        40 13% 89%;
+    --ring:         219 46% 20%;
     --radius:       0.5rem;
 
     /* ── Stitzzy brand tokens — used across ALL pages ── */
-    --ink:       #12203A;
-    --ink-muted: #5B6478;
-    --canvas:    #F4F6FA;
-    --canvas-2:  #EAEDF3;
-    --brass:     #B8892E;
-    --blue:      #3E63E0;
-    --rust:      #C1502E;
+    --ink:       #14161B;   /* ink-900 */
+    --ink-muted: #4A4D57;   /* ink-600 */
+    --ink-faint: #9A9DA8;   /* ink-300 */
+    --canvas:    #FAF9F6;   /* surface-0 */
+    --canvas-2:  #F1EFEA;   /* subtle warm step */
+    --surface:   #FFFFFF;   /* surface-1 */
+    --border-hairline: #E7E5DF;
+    --navy:      #1B2A4A;   /* brand accent */
+    --navy-100:  #E6EAF2;
+    --gold:      #B8863B;   /* verified/premium */
+    --gold-100:  #F5EBDA;
+    --brass:     #B8863B;   /* alias — legacy usages */
+    --blue:      #1B2A4A;   /* alias — legacy usages map to navy */
+    --success:   #1F7A4D;
+    --danger:    #B23A3A;
+    --rust:      #B23A3A;
   }
 
 
@@ -83,51 +98,49 @@
     @apply font-display font-semibold leading-tight;
   }
 
-  /* Focus visible — accessible ring */
+  /* Focus visible — accessible ring (navy) */
   :focus-visible {
-    @apply outline-none ring-2 ring-brand-500 ring-offset-2;
+    @apply outline-none ring-2 ring-brand-600 ring-offset-2;
   }
 
   /* Scrollbar styling */
   ::-webkit-scrollbar        { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track  { background: #EAEDF3; }
-  ::-webkit-scrollbar-thumb  { background: rgba(18,32,58,0.2); border-radius: 9999px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(18,32,58,0.4); }
+  ::-webkit-scrollbar-track  { background: #F1EFEA; }
+  ::-webkit-scrollbar-thumb  { background: rgba(27,42,74,0.2); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(27,42,74,0.4); }
 }
 
 /* ── Stitzzy Component Classes ──────────────────────────────────────── */
 @layer components {
 
-  /* The brand-defining card component — dashed border + corner rivet */
+  /* Card component — clean institutional hairline (calm, not playful) */
   .stitch-card {
-    @apply relative bg-white rounded-lg;
-    border: 1.5px dashed rgba(18, 32, 58, 0.28);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
-  }
-  .stitch-card::before {
-    content: "";
-    @apply absolute w-2 h-2 rounded-full;
-    top: 10px;
-    left: 10px;
-    background: #F4F6FA;
-    border: 1px dashed rgba(18, 32, 58, 0.35);
+    @apply relative rounded-lg;
+    background: var(--surface);
+    border: 1px solid var(--border-hairline);
+    box-shadow: 0 1px 3px rgba(20,22,27,0.04);
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
   }
   .stitch-card:hover {
-    @apply shadow-card-hover -translate-y-0.5;
+    @apply shadow-card-hover;
+    transform: translateY(-2px);
+    border-color: rgba(27,42,74,0.18);
   }
 
-  /* Eyebrow / label typography */
+  /* Eyebrow / label typography — gold accent */
   .eyebrow {
-    @apply font-mono text-[11px] tracking-[0.14em] uppercase text-brass;
+    @apply font-mono text-[11px] tracking-[0.14em] uppercase;
+    color: var(--gold);
   }
 
-  /* Buttons */
+  /* Buttons — navy is the ONLY primary fill (brand spec §3.3) */
   .btn-primary {
     @apply text-white font-medium rounded-lg px-5 py-2.5
-           transition-all duration-150 hover:bg-brand-600
+           transition-all duration-150
            disabled:opacity-40 disabled:cursor-not-allowed;
-    background-color: #12203A; /* Hardcoded to --ink to ensure visibility */
+    background-color: var(--navy);
   }
+  .btn-primary:hover:not(:disabled) { background-color: #16223C; }
   .btn-whatsapp {
     @apply text-white font-medium rounded-lg px-5 py-2.5
            transition-opacity duration-150 hover:opacity-90
@@ -135,27 +148,34 @@
     background: #25D366;
   }
   .btn-outline {
-    @apply border border-ink/25 text-ink font-medium rounded-lg px-5 py-2.5
-           transition-all duration-150 hover:bg-canvas-2
+    @apply text-ink font-medium rounded-lg px-5 py-2.5
+           transition-all duration-150
            disabled:opacity-40 disabled:cursor-not-allowed;
+    border: 1px solid var(--border-hairline);
   }
+  .btn-outline:hover:not(:disabled) { background: var(--canvas-2); border-color: rgba(27,42,74,0.25); }
 
   /* Size selector buttons */
   .size-btn {
-    @apply w-12 h-12 rounded-lg font-mono text-sm border border-ink/20
-           transition-all duration-150 hover:border-ink/60;
+    @apply w-12 h-12 rounded-lg font-mono text-sm transition-all duration-150;
+    border: 1px solid var(--border-hairline);
+    font-variant-numeric: tabular-nums;
   }
+  .size-btn:hover:not(:disabled) { border-color: rgba(27,42,74,0.5); }
   .size-btn.active {
-    @apply bg-ink text-white border-ink;
+    background: var(--navy-100);
+    border-color: var(--navy);
+    color: var(--navy);
+    font-weight: 600;
   }
   .size-btn:disabled {
     @apply opacity-35 line-through cursor-not-allowed;
   }
 
-  /* Skeleton loading shimmer */
+  /* Skeleton loading shimmer (warm) */
   .skeleton {
-    @apply rounded-lg bg-canvas-2;
-    background: linear-gradient(90deg, #EAEDF3 25%, #F4F6FA 50%, #EAEDF3 75%);
+    @apply rounded-lg;
+    background: linear-gradient(90deg, #EFEDE7 25%, #FAF9F6 50%, #EFEDE7 75%);
     background-size: 200% 100%;
     animation: shimmer 2s linear infinite;
   }
@@ -166,7 +186,8 @@
            border-b-2 border-transparent transition-colors duration-150;
   }
   .tab-btn.active {
-    @apply text-ink border-brand-500;
+    @apply text-ink;
+    border-color: var(--navy);
   }
 
   /* Badge variants */
@@ -176,8 +197,10 @@
   }
   .badge-live    { @apply bg-success/10 text-success; }
   .badge-soon    { @apply bg-canvas-2 text-ink-muted; }
-  .badge-official { @apply bg-brass/10 text-brass; }
-  .badge-stock   { @apply bg-brand-50 text-brand-600; }
+  .badge-official { background: var(--gold-100); color: var(--gold); }
+  .badge-stock   { background: var(--navy-100); color: var(--navy); }
+  /* Verified trust badge — gold, the brand's core signal */
+  .badge-verified { background: var(--gold-100); color: var(--gold); }
 
   /* FAQ accordion ── landing page */
   .faq-item {
@@ -224,7 +247,7 @@
     text-decoration: none;
   }
   .social-icon:hover {
-    background: #3E63E0;
+    background: var(--gold);
     color: #fff;
   }
 }
@@ -239,11 +262,13 @@
   /* Content visibility for below-fold performance */
   .content-auto { content-visibility: auto; contain-intrinsic-size: 1px 1000px; }
 
-  /* Gradient text */
+  /* Gradient text — navy institutional */
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
+    background-image: linear-gradient(135deg, #1B2A4A 0%, #2A3D5F 100%);
   }
+  /* Tabular numerals for prices & size tables (brand spec) */
+  .tnum { font-variant-numeric: tabular-nums; }
 
   /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
@@ -251,6 +276,9 @@
     .animate-shimmer    { animation: none; }
     .animate-fade-in    { animation: none; }
     .animate-slide-up   { animation: none; }
+    .animate-logo-in    { animation: none; opacity: 1; transform: none; }
+    .animate-loader-bar { animation: none; }
+    .animate-reveal     { animation: none; opacity: 1; transform: none; }
     .tag-hang           { animation: none; }
   }
 

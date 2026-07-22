@@ -9,7 +9,7 @@ runConfig:
 env:
   # App URL — production pe update karo
   - variable: NEXT_PUBLIC_APP_URL
-    value: https://stitzzy--stitzzy-app.us-central1.hosted.app
+    value: https://stitzzy.in
     availability:
       - BUILD
       - RUNTIME

@@ -12,7 +12,7 @@ import { getInstitutionBySlug, getDepartmentsByInstitution } from "@/lib/firesto
 import type { Institution, Department } from "@/types";
 
 const DEPT_COLORS = [
-  "#3E63E0", "#B8892E", "#C1502E", "#2E8B57", "#7C3AED", "#0891B2",
+  "#1B2A4A", "#B8863B", "#B23A3A", "#1F7A4D", "#3A4E7A", "#5B6478",
 ];
 
 const TYPE_LABELS: Record<Institution["type"], string> = {
@@ -256,7 +256,7 @@ export default function InstitutionDetailPage() {
                         />
                       </div>
                       <div>
-                        <p className="font-display font-semibold text-sm group-hover:text-blue-600 transition-colors">
+                        <p className="font-display font-semibold text-sm group-hover:text-brand-600 transition-colors">
                           {dept.name}
                         </p>
                         <p className="font-mono text-[10px] text-ink-muted">View uniforms</p>
@@ -264,7 +264,7 @@ export default function InstitutionDetailPage() {
                     </div>
                     <ChevronRight
                       size={15}
-                      className="text-ink-muted group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all duration-200"
+                      className="text-ink-muted group-hover:text-brand-600 group-hover:translate-x-0.5 transition-all duration-200"
                       aria-hidden="true"
                     />
                   </Link>

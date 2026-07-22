@@ -12,9 +12,6 @@ import {
 } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { generateWhatsAppLink } from "@/lib/whatsapp";
-import { useAuth } from "@clerk/nextjs";
-import { collection, addDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 /* ── Zod schema ─────────────────────────────────────────── */
 const schema = z.object({
@@ -66,7 +63,7 @@ function Field({
 /* ── Input styles ────────────────────────────────────────── */
 const inputCls =
   "w-full px-4 py-3 rounded-lg border font-mono text-sm bg-white transition-all duration-150 " +
-  "focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 " +
+  "focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-400 " +
   "placeholder:text-ink-muted/50";
 
 const errorBorder = "border-red-400";
@@ -82,7 +79,6 @@ export default function CheckoutPage() {
   const [sending, setSending] = useState(false);
   const [done,   setDone]   = useState(false);
   const [trackingCode, setTrackingCode] = useState("");
-  const { userId } = useAuth();
   const fieldId = useId();
 
   const {
@@ -131,37 +127,42 @@ export default function CheckoutPage() {
     // Open WhatsApp BEFORE the async Firestore write to avoid popup blocking on mobile
     window.open(link, "_blank");
 
+    let orderSaved = true;
     try {
-      await addDoc(collection(db, "orders"), {
-        trackingCode: code,
-        userId: userId || null,
-        customerName: data.fullName,
-        customerPhone: `+91 ${data.phone}`,
-        institution: data.institution,
-        department: data.department,
-        status: "whatsapp_sent",
-        subTotal: sub,
-        discountAmount: discount,
-        totalAmount: total,
-        address,
-        notes: data.notes || "",
-        items: items.map(i => ({
-          productId: i.productId,
-          productName: i.productName,
-          size: i.size,
-          qty: i.qty,
-          unitPrice: i.unitPrice,
-        })),
-        createdAt: new Date().toISOString(),
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          trackingCode: code,
+          customerName: data.fullName,
+          customerPhone: `+91 ${data.phone}`,
+          institution: data.institution,
+          department: data.department,
+          subTotal: sub,
+          discountAmount: discount,
+          totalAmount: total,
+          address,
+          notes: data.notes || "",
+          items: items.map(i => ({
+            productId: i.productId,
+            productName: i.productName,
+            size: i.size,
+            qty: i.qty,
+            unitPrice: i.unitPrice,
+            imageUrl: i.imageUrl ?? "",
+          })),
+        }),
       });
-    } catch {
-      // Order save failed silently — WhatsApp already opened, order not lost
+      if (!res.ok) throw new Error(await res.text());
+    } catch (err) {
+      console.error("Order save failed:", err);
+      orderSaved = false;
     }
 
     await new Promise((r) => setTimeout(r, 600));
     setSending(false);
     setDone(true);
-    setTrackingCode(code);
+    setTrackingCode(orderSaved ? code : "");
     clearCart();
   }
 
@@ -172,7 +173,7 @@ export default function CheckoutPage() {
         <p className="font-mono text-xs text-ink-muted">Add uniform items to your cart before checking out.</p>
         <Link
           href="/institutions"
-          className="font-mono text-xs text-blue-600 hover:underline flex items-center gap-1 mt-2"
+          className="font-mono text-xs text-brand-600 hover:underline flex items-center gap-1 mt-2"
         >
           Browse uniforms
         </Link>
@@ -192,7 +193,7 @@ export default function CheckoutPage() {
           aria-label="Order successfully sent"
         >
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
-            <Check size={28} className="text-green-600" aria-hidden="true" />
+            <Check size={28} className="text-success" aria-hidden="true" />
           </div>
           <h1 className="font-display text-2xl font-semibold mb-3">Order sent!</h1>
           <p className="font-mono text-sm text-ink-muted mb-6 leading-relaxed">
@@ -200,12 +201,19 @@ export default function CheckoutPage() {
             you&apos;ll receive a reply with your delivery details.
           </p>
           <div className="space-y-3">
-            <Link
-              href={`/order/${trackingCode}`}
-              className="block w-full py-3 rounded-xl btn-primary font-mono text-sm uppercase tracking-wide text-center"
-            >
-              Track your order
-            </Link>
+            {trackingCode ? (
+              <Link
+                href={`/order/${trackingCode}`}
+                className="block w-full py-3 rounded-xl btn-primary font-mono text-sm uppercase tracking-wide text-center"
+              >
+                Track your order
+              </Link>
+            ) : (
+              <p className="font-mono text-xs text-amber-600 bg-amber-50 rounded-lg px-4 py-3">
+                Order sent via WhatsApp but tracking could not be saved.
+                Please contact support if you need tracking info.
+              </p>
+            )}
             <Link
               href="/"
               className="block w-full py-3 rounded-xl border border-ink/10 font-mono text-sm uppercase tracking-wide text-ink hover:bg-canvas-2 transition-colors text-center"
@@ -453,7 +461,7 @@ export default function CheckoutPage() {
                     <p className="font-mono text-[10px] uppercase tracking-widest text-ink-muted">Customer</p>
                     <p className="font-display font-semibold">{values.fullName}</p>
                     <p className="font-mono text-sm text-ink-muted">+91 {values.phone}</p>
-                    <div className="h-px" style={{ background: "rgba(18,32,58,0.07)" }} />
+                    <div className="h-px" style={{ background: "rgba(20,22,27,0.07)" }} />
                     <p className="font-mono text-[10px] uppercase tracking-widest text-ink-muted">Delivery</p>
                     <p className="font-mono text-sm text-ink">
                       {values.addressLine}<br />
@@ -470,7 +478,7 @@ export default function CheckoutPage() {
                     </p>
                     {values.notes && (
                       <>
-                        <div className="h-px" style={{ background: "rgba(18,32,58,0.07)" }} />
+                        <div className="h-px" style={{ background: "rgba(20,22,27,0.07)" }} />
                         <p className="font-mono text-xs text-ink-muted">📝 {values.notes}</p>
                       </>
                     )}
@@ -492,13 +500,13 @@ export default function CheckoutPage() {
                             {item.qty}× · Size {item.size}
                           </p>
                         </div>
-                        <p className="font-display font-semibold text-blue-600">
+                        <p className="font-display font-semibold text-brand-600">
                           ₹{(item.unitPrice * item.qty).toLocaleString("en-IN")}
                         </p>
                       </div>
                     ))}
                   </div>
-                  <div className="h-px my-4" style={{ background: "rgba(18,32,58,0.08)" }} />
+                  <div className="h-px my-4" style={{ background: "rgba(20,22,27,0.08)" }} />
                   
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between items-baseline text-sm">
@@ -506,7 +514,7 @@ export default function CheckoutPage() {
                       <span className="font-mono text-ink">₹{sub.toLocaleString("en-IN")}</span>
                     </div>
                     {discount > 0 && (
-                      <div className="flex justify-between items-baseline text-sm text-green-600">
+                      <div className="flex justify-between items-baseline text-sm text-success">
                         <span className="font-mono text-xs">Combo Discount</span>
                         <span className="font-mono font-medium">-₹{discount.toLocaleString("en-IN")}</span>
                       </div>
@@ -515,7 +523,7 @@ export default function CheckoutPage() {
 
                   <div className="flex justify-between items-baseline pt-4 border-t border-ink/10">
                     <span className="font-mono text-xs uppercase tracking-widest text-ink-muted">Total</span>
-                    <span className="font-display text-xl font-semibold text-blue-600">
+                    <span className="font-display text-xl font-semibold text-brand-600">
                       ₹{total.toLocaleString("en-IN")}
                     </span>
                   </div>
@@ -526,7 +534,7 @@ export default function CheckoutPage() {
                   className="rounded-xl p-4 mb-6 flex items-start gap-3"
                   style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}
                 >
-                  <MessageCircle size={18} className="text-green-600 mt-0.5 flex-shrink-0" />
+                  <MessageCircle size={18} className="text-success mt-0.5 flex-shrink-0" />
                   <p className="font-mono text-xs text-green-800 leading-relaxed">
                     Clicking <strong>Send on WhatsApp</strong> will open WhatsApp with
                     your full order pre-filled. No payment is taken — our team will
@@ -557,7 +565,7 @@ export default function CheckoutPage() {
                 whileTap={{ scale: 0.97 }}
                 className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl
                            font-mono text-sm uppercase tracking-wide transition-all
-                           bg-green-600 hover:bg-green-700 text-white disabled:opacity-60"
+                           bg-success hover:bg-green-700 text-white disabled:opacity-60"
               >
                 {sending ? (
                   <><Loader2 size={16} className="animate-spin" /> Preparing…</>

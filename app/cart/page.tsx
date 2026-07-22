@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag, Trash2, Plus, Minus, ArrowRight,
@@ -78,7 +79,7 @@ export default function CartPage() {
                 </p>
                 <button
                   onClick={clearCart}
-                  className="font-mono text-xs text-ink-muted hover:text-red-500 transition-colors flex items-center gap-1"
+                  className="font-mono text-xs text-ink-muted hover:text-danger transition-colors flex items-center gap-1"
                   aria-label="Remove all items from cart"
                 >
                   <Trash2 size={11} aria-hidden="true" /> Clear all
@@ -102,10 +103,11 @@ export default function CartPage() {
                       style={{ background: "var(--canvas-2)" }}
                     >
                       {item.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <Image
                           src={item.imageUrl}
                           alt={item.productName}
+                          width={80}
+                          height={80}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -125,7 +127,7 @@ export default function CartPage() {
                       {/* Qty controls */}
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1 border rounded-lg overflow-hidden"
-                             style={{ borderColor: "rgba(18,32,58,0.15)" }}>
+                             style={{ borderColor: "rgba(20,22,27,0.15)" }}>
                           <button
                             onClick={() => updateQty(item.productId, item.size, item.qty - 1)}
                             disabled={item.qty <= 1}
@@ -151,7 +153,7 @@ export default function CartPage() {
 
                         <button
                           onClick={() => removeItem(item.productId, item.size)}
-                          className="text-ink-muted hover:text-red-500 transition-colors p-1"
+                          className="text-ink-muted hover:text-danger transition-colors p-1"
                           aria-label={`Remove ${item.productName} (size ${item.size}) from cart`}
                         >
                           <Trash2 size={14} aria-hidden="true" />
@@ -161,7 +163,7 @@ export default function CartPage() {
 
                     {/* Price */}
                     <div className="text-right flex-shrink-0">
-                      <p className="font-display font-semibold text-blue-600">
+                      <p className="font-display font-semibold text-brand-600">
                         ₹{(item.unitPrice * item.qty).toLocaleString("en-IN")}
                       </p>
                       {item.qty > 1 && (
@@ -200,7 +202,7 @@ export default function CartPage() {
                   ))}
                 </div>
 
-                <div className="h-px mb-5" style={{ background: "rgba(18,32,58,0.08)" }} />
+                <div className="h-px mb-5" style={{ background: "rgba(20,22,27,0.08)" }} />
 
                 <div className="space-y-2 mb-5">
                   <div className="flex justify-between items-baseline text-sm">
@@ -208,7 +210,7 @@ export default function CartPage() {
                     <span className="font-mono text-ink">₹{sub.toLocaleString("en-IN")}</span>
                   </div>
                   {discount > 0 && (
-                    <div className="flex justify-between items-baseline text-sm text-green-600">
+                    <div className="flex justify-between items-baseline text-sm text-success">
                       <span className="font-mono text-xs">Combo Discount</span>
                       <span className="font-mono font-medium">-₹{discount.toLocaleString("en-IN")}</span>
                     </div>
@@ -217,7 +219,7 @@ export default function CartPage() {
 
                 <div className="flex justify-between items-baseline mb-6 pt-4 border-t border-ink/10">
                   <span className="font-mono text-xs uppercase tracking-widest text-ink-muted">Total</span>
-                  <span className="font-display text-2xl font-semibold text-blue-600">
+                  <span className="font-display text-2xl font-semibold text-brand-600">
                     ₹{total.toLocaleString("en-IN")}
                   </span>
                 </div>

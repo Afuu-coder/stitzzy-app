@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs, orderBy, query, doc, updateDoc, limit } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { ShoppingBag, Eye, Edit2, X, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -41,16 +39,18 @@ export default function AdminOrdersPage() {
   async function fetchOrders() {
     setLoading(true);
     try {
-      const q = query(collection(db, "orders"), limit(100));
-      const snap = await getDocs(q);
-      const fetchedOrders = snap.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; createdAt?: string; [key: string]: unknown }));
-      
+      const res = await fetch("/api/admin/orders?limit=100");
+      if (!res.ok) throw new Error(await res.text());
+      const { orders: fetchedOrders } = (await res.json()) as {
+        orders: { id: string; createdAt?: string; [key: string]: unknown }[];
+      };
+
       fetchedOrders.sort((a, b) => {
         const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return timeB - timeA;
       });
-      
+
       setOrders(fetchedOrders as never[]);
     } catch {
       toast.error("Failed to load orders");

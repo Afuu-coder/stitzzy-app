@@ -109,21 +109,28 @@ export function SizeChartModal({
             exit={{ opacity: 0, scale: 0.95 }}
             className="w-full max-w-lg bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
           >
-            {/* Header */}
-            <div className="bg-ink text-white px-6 py-4 flex items-center justify-between">
-              <h3 className="font-display font-semibold tracking-wide uppercase text-sm">{title}</h3>
-              <button onClick={onClose} className="hover:opacity-70 transition-opacity">
+            {/* Header — navy */}
+            <div
+              className="px-6 py-4 flex items-center justify-between text-white"
+              style={{ background: "var(--navy)" }}
+            >
+              <h3 className="font-display font-semibold tracking-wide text-sm">{title}</h3>
+              <button onClick={onClose} aria-label="Close size chart" className="hover:opacity-70 transition-opacity">
                 <X size={18} />
               </button>
             </div>
-            
+
             {/* Table */}
             <div className="overflow-y-auto overflow-x-auto p-6 flex-1">
-              <table className="w-full text-center border-collapse">
+              <table className="w-full text-center border-collapse tnum">
                 <thead>
                   <tr>
                     {headers.map((h, i) => (
-                      <th key={i} className="font-display font-bold text-xs uppercase tracking-wider py-3 border border-ink text-ink bg-canvas-2">
+                      <th
+                        key={i}
+                        className="font-mono font-medium text-[11px] uppercase tracking-wider py-2.5 px-2 text-ink-muted"
+                        style={{ borderBottom: "1.5px solid var(--navy)" }}
+                      >
                         {h}
                       </th>
                     ))}
@@ -131,10 +138,20 @@ export function SizeChartModal({
                 </thead>
                 <tbody>
                   {rows.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-canvas transition-colors">
+                    <tr
+                      key={idx}
+                      className="transition-colors hover:bg-[var(--navy-100)]"
+                      style={{ borderBottom: "1px solid var(--border-hairline)" }}
+                    >
                       {Object.values(row).map((val, i) => (
-                        <td key={i} className={`py-2.5 border border-ink text-ink ${i === 0 ? 'font-bold font-display text-sm' : 'font-mono text-xs'}`}>
-                          {String(val)}{i > 0 && '"'}
+                        <td
+                          key={i}
+                          className={`py-2.5 px-2 text-ink ${
+                            i === 0 ? "font-semibold font-display text-sm" : "font-mono text-xs"
+                          }`}
+                        >
+                          {String(val)}
+                          {i > 0 && '"'}
                         </td>
                       ))}
                     </tr>
@@ -142,11 +159,17 @@ export function SizeChartModal({
                 </tbody>
               </table>
 
-              <div className="mt-6 bg-canvas p-4 rounded-lg flex gap-4 items-start border border-ink/10">
-                <div className="w-8 h-8 rounded bg-ink flex items-center justify-center flex-shrink-0">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+              <div
+                className="mt-6 p-4 rounded-lg flex gap-3 items-start"
+                style={{ background: "var(--gold-100)" }}
+              >
+                <div
+                  className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0"
+                  style={{ background: "var(--gold)" }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                 </div>
-                <p className="font-mono text-[10px] text-ink-muted leading-relaxed">
+                <p className="font-mono text-[10px] leading-relaxed" style={{ color: "#8A6A2E" }}>
                   {note}
                 </p>
               </div>

@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { useUser, useAuth } from "@clerk/nextjs";
-import {
-  collection, query, where, getDocs,
-  doc, getDoc, setDoc,
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { useUser, useAuth, useClerk, SignOutButton } from "@clerk/nextjs";
 import {
   Package, User as UserIcon, Ruler, Building2,
   ArrowRight, Loader2, Save, ShoppingBag,
@@ -295,6 +290,7 @@ type Tab = "orders" | "profile" | "settings";
 export default function AccountPage() {
   const { user, isLoaded } = useUser();
   const { userId }          = useAuth();
+  const { openUserProfile } = useClerk();
   const router              = useRouter();
   const fieldId             = useId();
 
@@ -312,24 +308,22 @@ export default function AccountPage() {
   const activeOrders    = orders.filter(o => !["delivered", "cancelled", "rejected"].includes(o.status));
   const completedOrders = orders.filter(o => ["delivered", "cancelled", "rejected"].includes(o.status));
 
+  /* Total spent — exclude cancelled/rejected orders (mirrors admin revenue logic) */
+  const totalSpent = orders
+    .filter(o => !["cancelled", "rejected"].includes(o.status))
+    .reduce((s, o) => s + (o.totalAmount ?? 0), 0);
+
   useEffect(() => {
     if (!isLoaded) return;
     if (!userId) { router.push("/sign-in"); return; }
 
     (async () => {
       try {
-        const [userDoc, ordersSnap] = await Promise.all([
-          getDoc(doc(db, "users", userId)),
-          getDocs(query(
-            collection(db, "orders"),
-            where("userId", "==", userId)
-          )),
-        ]);
-        if (userDoc.exists()) setProfile(userDoc.data() as UserProfile);
-        
-        const fetchedOrders = ordersSnap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<OrderSummary, "id">) }));
-        fetchedOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setOrders(fetchedOrders);
+        const res = await fetch("/api/account");
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        if (data.profile) setProfile(data.profile as UserProfile);
+        setOrders((data.orders ?? []) as OrderSummary[]);
       } catch {
         toast.error("Could not load account data. Please try again.");
       } finally {
@@ -343,7 +337,12 @@ export default function AccountPage() {
     if (!userId) return;
     setSaving(true);
     try {
-      await setDoc(doc(db, "users", userId), profile, { merge: true });
+      const res = await fetch("/api/account", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profile),
+      });
+      if (!res.ok) throw new Error(await res.text());
       toast.success("Profile saved!");
     } catch {
       toast.error("Failed to save. Please try again.");
@@ -402,7 +401,7 @@ export default function AccountPage() {
             <div className="w-px" style={{ background: "rgba(244,246,250,0.1)" }} />
             <div className="text-center">
               <p className="font-display text-2xl font-semibold">
-                ₹{orders.reduce((s, o) => s + (o.totalAmount ?? 0), 0).toLocaleString("en-IN")}
+                ₹{totalSpent.toLocaleString("en-IN")}
               </p>
               <p className="font-mono text-[10px] uppercase tracking-wide" style={{ color: "rgba(244,246,250,0.5)" }}>Spent</p>
             </div>
@@ -638,24 +637,25 @@ export default function AccountPage() {
                     <p className="font-mono text-xs font-semibold">Manage Clerk account</p>
                     <p className="font-mono text-[10px] text-ink-muted mt-0.5">Change email, password, connected accounts</p>
                   </div>
-                  <Link
-                    href="/account/manage"
+                  <button
+                    onClick={() => openUserProfile()}
                     className="font-mono text-xs btn-primary px-3 py-1.5 rounded-lg flex items-center gap-1"
                   >
                     Manage <ArrowRight size={11} />
-                  </Link>
+                  </button>
                 </div>
                 <div className="border-t p-4 flex items-center justify-between" style={{ borderColor: "rgba(18,32,58,0.1)" }}>
                   <div>
                     <p className="font-mono text-xs font-semibold">Sign out</p>
                     <p className="font-mono text-[10px] text-ink-muted mt-0.5">Sign out from this device</p>
                   </div>
-                  <Link
-                    href="/sign-out"
-                    className="font-mono text-xs border border-ink/20 px-3 py-1.5 rounded-lg hover:bg-canvas-2 transition-colors"
-                  >
-                    Sign out
-                  </Link>
+                  <SignOutButton redirectUrl="/">
+                    <button
+                      className="font-mono text-xs border border-ink/20 px-3 py-1.5 rounded-lg hover:bg-canvas-2 transition-colors"
+                    >
+                      Sign out
+                    </button>
+                  </SignOutButton>
                 </div>
                 <div className="border-t p-4 flex items-center justify-between" style={{ borderColor: "rgba(18,32,58,0.1)" }}>
                   <div>

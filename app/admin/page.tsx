@@ -57,21 +57,26 @@ export default function AdminOverviewPage() {
 
   useEffect(() => {
     Promise.allSettled([
-      getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(500))),
+      // Orders go through the Admin SDK route (Firestore rules deny client reads)
+      fetch("/api/admin/orders").then(async (r) => {
+        if (!r.ok) throw new Error(await r.text());
+        const data = (await r.json()) as { orders: Array<Record<string, unknown>> };
+        return data.orders ?? [];
+      }),
       getDocs(query(collection(db, "institutions"), where("isActive", "==", true))),
       getDocs(query(collection(db, "products"), where("isActive", "==", true))),
     ]).then(([ordersRes, instsRes, prodsRes]) => {
-      const orders = ordersRes.status === "fulfilled" ? ordersRes.value.docs : [];
+      const orders = ordersRes.status === "fulfilled" ? ordersRes.value : [];
       const insts  = instsRes.status  === "fulfilled" ? instsRes.value.docs  : [];
       const prods  = prodsRes.status  === "fulfilled" ? prodsRes.value.docs  : [];
 
       // Exclude cancelled/rejected orders from revenue
       const EXCLUDED = ["cancelled", "rejected"];
       const revenue = orders
-        .filter(d => !EXCLUDED.includes(d.data().status))
-        .reduce((sum, d) => sum + ((d.data().totalAmount as number) ?? 0), 0);
+        .filter((o) => !EXCLUDED.includes(o.status as string))
+        .reduce((sum, o) => sum + ((o.totalAmount as number) ?? 0), 0);
 
-      setRecentOrders(orders.slice(0, 5).map(d => ({ id: d.id, ...d.data() })));
+      setRecentOrders(orders.slice(0, 5));
 
       setStats({
         orders: orders.length,

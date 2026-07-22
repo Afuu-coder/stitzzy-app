@@ -11,16 +11,17 @@ import {
 } from "lucide-react";
 import { getProductById, getProductReviews } from "@/lib/firestore";
 import { useCartStore } from "@/store/cart";
+import { toast } from "sonner";
 import type { Product, Review } from "@/types";
 
-/* ── Static size chart (generic — product-level chart overrides this) ── */
+/* ── Static size chart (Stitzzy shirt/T-shirt chart — real measurements) ── */
 const DEFAULT_SIZE_CHART = [
-  { size: "XS",  chest: '34"', shoulder: '15"',   length: '27"'   },
-  { size: "S",   chest: '36"', shoulder: '15.5"',  length: '27.5"' },
-  { size: "M",   chest: '38"', shoulder: '16.5"',  length: '28"'   },
-  { size: "L",   chest: '40"', shoulder: '17"',    length: '28.5"' },
-  { size: "XL",  chest: '42"', shoulder: '17.5"',  length: '29"'   },
-  { size: "XXL", chest: '44"', shoulder: '18"',    length: '29.5"' },
+  { size: "XS",  chest: '36"', shoulder: '25"', length: '7"'   },
+  { size: "S",   chest: '38"', shoulder: '26"', length: '7"'   },
+  { size: "M",   chest: '40"', shoulder: '27"', length: '7.5"' },
+  { size: "L",   chest: '42"', shoulder: '28"', length: '8"'   },
+  { size: "XL",  chest: '44"', shoulder: '29"', length: '8.5"' },
+  { size: "XXL", chest: '46"', shoulder: '30"', length: '9"'   },
 ];
 
 const DEFAULT_SIZES = DEFAULT_SIZE_CHART.map((r) => r.size);
@@ -52,12 +53,7 @@ function Stars({
 
 /* ── Image gallery with hover-to-zoom + tap-to-zoom for touch ── */
 function ImageGallery({ product }: { product: Product }) {
-  // Use imageUrls (denormalized string array) as single source of truth;
-  // fall back to the ProductImage[] relation only if imageUrls is absent.
-  const allUrls: string[] =
-    (product.imageUrls?.length ?? 0) > 0
-      ? (product.imageUrls as string[])
-      : (product.images?.map((i) => i.url) ?? []);
+  const allUrls: string[] = product.images ?? [];
   const [active,    setActive]    = useState(0);
   const [isZooming, setIsZooming] = useState(false);
   const [zoomPos,   setZoomPos]   = useState({ x: 50, y: 50 });
@@ -105,12 +101,12 @@ function ImageGallery({ product }: { product: Product }) {
         onTouchEnd={handleTouchToggle}
         className="aspect-square rounded-xl overflow-hidden bg-white relative cursor-crosshair"
         role="img"
-        aria-label={`${product.name} — image ${active + 1} of ${allUrls.length}. ${isZooming ? "Zoomed in." : "Hover or tap to zoom."}`}
+        aria-label={`${product.title} — image ${active + 1} of ${allUrls.length}. ${isZooming ? "Zoomed in." : "Hover or tap to zoom."}`}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={allUrls[active]}
-          alt={product.name}
+          alt={product.title}
           className={`w-full h-full object-contain transition-transform duration-200 ${
             isZooming ? "scale-[2.2]" : "scale-100"
           }`}
@@ -144,7 +140,7 @@ function ImageGallery({ product }: { product: Product }) {
               aria-pressed={active === i}
               className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
                 active === i
-                  ? "border-blue-500 ring-2 ring-blue-500/20"
+                  ? "border-brand-600 ring-2 ring-brand-600/20"
                   : "border-ink/10 hover:border-ink/30"
               }`}
             >
@@ -217,15 +213,15 @@ export default function ProductDetailPage() {
     if (!product || !selectedSize) return;
     addItem({
       productId:   product.id,
-      productName: product.name,
+      productName: product.title,
       size:        selectedSize,
       qty:         1,
-      unitPrice:   product.discountPrice ?? product.basePrice,
-      imageUrl:    product.images?.[0]?.url || product.imageUrls?.[0],
+      unitPrice:   product.price,
+      imageUrl:    product.images?.[0],
       category:    product.category,
     });
     setAdded(true);
-    // Clear any previous timer before setting a new one
+    toast.success(`${product.title} (${selectedSize}) added to cart`);
     if (addedTimerRef.current) clearTimeout(addedTimerRef.current);
     addedTimerRef.current = setTimeout(() => setAdded(false), 2500);
 
@@ -235,11 +231,11 @@ export default function ProductDetailPage() {
     if (!product || !selectedSize) return;
     addItem({
       productId:   product.id,
-      productName: product.name,
+      productName: product.title,
       size:        selectedSize,
       qty:         1,
-      unitPrice:   product.discountPrice ?? product.basePrice,
-      imageUrl:    product.images?.[0]?.url || product.imageUrls?.[0],
+      unitPrice:   product.price,
+      imageUrl:    product.images?.[0],
       category:    product.category,
     });
     router.push("/checkout");
@@ -271,8 +267,8 @@ export default function ProductDetailPage() {
     );
   }
 
-  const price      = product.discountPrice ?? product.basePrice;
-  const original   = product.discountPrice ? product.basePrice : null;
+  const price      = product.price;
+  const original   = product.mrp > product.price ? product.mrp : null;
   const avgRating  = reviews.length
     ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
     : null;
@@ -281,12 +277,13 @@ export default function ProductDetailPage() {
   const genderLabel = product.gender
     ? product.gender.charAt(0).toUpperCase() + product.gender.slice(1)
     : "—";
-  const semestersLabel = product.applicableSemesters?.length
-    ? product.applicableSemesters.join(", ")
-    : "All";
   const tagsLabel = product.tags?.length ? product.tags.join(", ") : "—";
 
-  const sizes = product.sizes?.length ? product.sizes : DEFAULT_SIZES;
+  // Dedupe size labels — duplicate rows would render duplicate size buttons
+  // with the same key and trip React's unique-key warning.
+  const sizes = product.sizes?.length
+    ? [...new Set(product.sizes.map((s) => s.size))]
+    : DEFAULT_SIZES;
 
   const TABS: { key: Tab; label: string }[] = [
     { key: "description", label: "Description"              },
@@ -304,11 +301,11 @@ export default function ProductDetailPage() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Product",
-            name: product.name,
+            name: product.title,
             description: product.description ?? `Official uniform — ${product.category ?? "Uniform"}`,
-            sku: product.sku,
+            sku: product.sizes?.[0]?.sku ?? product.slug,
             brand: { "@type": "Brand", name: "Stitzzy" },
-            image: product.imageUrls?.[0] ?? product.images?.[0]?.url ?? "",
+            image: product.images?.[0] ?? "",
             offers: {
               "@type": "Offer",
               priceCurrency: "INR",
@@ -332,7 +329,7 @@ export default function ProductDetailPage() {
       {/* ── Breadcrumb ── */}
       <nav
         className="border-b"
-        style={{ borderColor: "rgba(18,32,58,0.08)" }}
+        style={{ borderColor: "rgba(20,22,27,0.08)" }}
         aria-label="Breadcrumb"
       >
         <ol className="max-w-6xl mx-auto px-6 py-3 flex items-center gap-2 font-mono text-xs text-ink-muted flex-wrap">
@@ -356,7 +353,7 @@ export default function ProductDetailPage() {
             className="text-ink truncate max-w-[180px] sm:max-w-xs"
             aria-current="page"
           >
-            {product.name}
+            {product.title}
           </li>
         </ol>
       </nav>
@@ -386,7 +383,7 @@ export default function ProductDetailPage() {
           {/* Product name + rating */}
           <div>
             <h1 className="font-display text-2xl md:text-3xl font-semibold mb-2">
-              {product.name}
+              {product.title}
             </h1>
             {avgRating && (
               <div className="flex items-center gap-2">
@@ -403,7 +400,7 @@ export default function ProductDetailPage() {
 
           {/* Price */}
           <div className="flex items-baseline gap-3" aria-label={`Price: ₹${price.toLocaleString("en-IN")}`}>
-            <span className="font-display text-3xl font-semibold text-blue-600">
+            <span className="font-display text-3xl font-semibold text-brand-600">
               ₹{price.toLocaleString("en-IN")}
             </span>
             {original && (
@@ -411,14 +408,14 @@ export default function ProductDetailPage() {
                 <span className="font-mono text-sm text-ink-muted line-through" aria-label={`Original price: ₹${original.toLocaleString("en-IN")}`}>
                   ₹{original.toLocaleString("en-IN")}
                 </span>
-                <span className="font-mono text-xs text-green-600 font-medium">
+                <span className="font-mono text-xs text-success font-medium">
                   {Math.round(((original - price) / original) * 100)}% off
                 </span>
               </>
             )}
           </div>
 
-          <div className="h-px" style={{ background: "rgba(18,32,58,0.08)" }} aria-hidden="true" />
+          <div className="h-px" style={{ background: "rgba(20,22,27,0.08)" }} aria-hidden="true" />
 
           {/* Size selector */}
           <div>
@@ -432,7 +429,7 @@ export default function ProductDetailPage() {
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setShowSmartSize((s) => !s)}
-                  className="font-mono text-xs text-purple-600 hover:underline flex items-center gap-1"
+                  className="font-mono text-xs text-brand-600 hover:underline flex items-center gap-1"
                   aria-expanded={showSmartSize}
                   aria-controls="smart-size-panel"
                 >
@@ -440,7 +437,7 @@ export default function ProductDetailPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab("size-chart")}
-                  className="font-mono text-xs text-blue-600 hover:underline flex items-center gap-1"
+                  className="font-mono text-xs text-brand-600 hover:underline flex items-center gap-1"
                   aria-label="View size guide chart below"
                 >
                   <Ruler size={11} aria-hidden="true" /> Size guide
@@ -458,8 +455,8 @@ export default function ProductDetailPage() {
                   exit={{ opacity: 0, height: 0 }}
                   className="overflow-hidden mb-4"
                 >
-                  <div className="p-4 rounded-xl border bg-purple-50/50 border-purple-100">
-                    <p className="font-display font-medium text-sm text-purple-900 mb-3">
+                  <div className="p-4 rounded-xl border bg-brand-50 border-brand-100">
+                    <p className="font-display font-medium text-sm text-brand-900 mb-3">
                       ✨ Smart Sizing Assistant
                     </p>
                     <form onSubmit={calculateSize} className="flex flex-col sm:flex-row gap-2">
@@ -470,8 +467,8 @@ export default function ProductDetailPage() {
                         min={100} max={250}
                         value={hw.height}
                         onChange={(e) => setHw({ ...hw, height: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg border border-purple-200 bg-white text-sm
-                                   focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                        className="w-full px-3 py-2 rounded-lg border border-brand-200 bg-white text-sm
+                                   focus:outline-none focus:ring-2 focus:ring-brand-600/20"
                       />
                       <label htmlFor="smart-weight" className="sr-only">Weight in kilograms</label>
                       <input
@@ -480,19 +477,19 @@ export default function ProductDetailPage() {
                         min={30} max={200}
                         value={hw.weight}
                         onChange={(e) => setHw({ ...hw, weight: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg border border-purple-200 bg-white text-sm
-                                   focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                        className="w-full px-3 py-2 rounded-lg border border-brand-200 bg-white text-sm
+                                   focus:outline-none focus:ring-2 focus:ring-brand-600/20"
                       />
                       <button
                         type="submit"
-                        className="bg-purple-600 text-white px-4 py-2 rounded-lg font-mono text-xs
-                                   uppercase tracking-wide hover:bg-purple-700 transition-colors whitespace-nowrap"
+                        className="bg-brand-600 text-white px-4 py-2 rounded-lg font-mono text-xs
+                                   uppercase tracking-wide hover:bg-brand-700 transition-colors whitespace-nowrap"
                       >
                         Calculate
                       </button>
                     </form>
                     {recommendedSize && (
-                      <p className="mt-3 font-mono text-xs text-purple-700" role="status" aria-live="polite">
+                      <p className="mt-3 font-mono text-xs text-brand-700" role="status" aria-live="polite">
                         We recommend size <strong className="text-sm">{recommendedSize}</strong> for a perfect fit.
                       </p>
                     )}
@@ -533,14 +530,14 @@ export default function ProductDetailPage() {
               whileTap={selectedSize ? { scale: 0.97 } : {}}
               aria-label={
                 selectedSize
-                  ? `Add ${product.name} size ${selectedSize} to cart`
+                  ? `Add ${product.title} size ${selectedSize} to cart`
                   : "Select a size to add to cart"
               }
               className={`flex items-center justify-center gap-2 py-3.5 rounded-xl font-mono text-sm
                           uppercase tracking-wide transition-all duration-200 border
                 ${selectedSize
                   ? added
-                    ? "bg-green-600 text-white border-green-600"
+                    ? "bg-success text-white border-success"
                     : "btn-outline"
                   : "bg-canvas-2 text-ink-muted border-transparent cursor-not-allowed opacity-60"
                 }`}
@@ -558,13 +555,13 @@ export default function ProductDetailPage() {
               whileTap={selectedSize ? { scale: 0.97 } : {}}
               aria-label={
                 selectedSize
-                  ? `Order ${product.name} size ${selectedSize} now`
+                  ? `Order ${product.title} size ${selectedSize} now`
                   : "Select a size to order now"
               }
               className={`flex items-center justify-center gap-2 py-3.5 rounded-xl font-mono text-sm
                           uppercase tracking-wide transition-all duration-200 border border-transparent
                 ${selectedSize
-                  ? "btn-primary bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
+                  ? "btn-primary bg-brand-600 hover:bg-brand-700 text-white shadow-md hover:shadow-lg"
                   : "bg-canvas-2 text-ink-muted cursor-not-allowed opacity-60"
                 }`}
             >
@@ -577,7 +574,7 @@ export default function ProductDetailPage() {
             className="flex items-start gap-3 rounded-lg p-4 bg-canvas-2"
             role="note"
           >
-            <MessageCircle size={16} className="text-green-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
+            <MessageCircle size={16} className="text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
             <p className="font-mono text-xs text-ink-muted leading-relaxed">
               Orders are confirmed via WhatsApp. Once you add items and checkout,
               a pre-formatted message is sent to our team.
@@ -595,7 +592,7 @@ export default function ProductDetailPage() {
                 key={label}
                 className="flex flex-col items-center gap-1.5 rounded-lg p-3 text-center bg-canvas-2"
               >
-                <Icon size={16} className="text-blue-500" aria-hidden="true" />
+                <Icon size={16} className="text-brand-600" aria-hidden="true" />
                 <span className="font-mono text-[10px] text-ink-muted leading-tight">{label}</span>
               </div>
             ))}
@@ -611,7 +608,7 @@ export default function ProductDetailPage() {
           role="tablist"
           aria-label="Product details"
           className="flex gap-0 border-b mb-8"
-          style={{ borderColor: "rgba(18,32,58,0.1)" }}
+          style={{ borderColor: "rgba(20,22,27,0.1)" }}
         >
           {TABS.map((tab) => (
             <button
@@ -653,10 +650,10 @@ export default function ProductDetailPage() {
               </p>
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
-                  { label: "SKU",       value: product.sku      },
-                  { label: "Gender",    value: genderLabel       },
-                  { label: "Semesters", value: semestersLabel    },
-                  { label: "Tags",      value: tagsLabel         },
+                  { label: "Fabric",  value: product.fabricDetails    || "—" },
+                  { label: "Care",    value: product.careInstructions || "—" },
+                  { label: "Gender",  value: genderLabel                     },
+                  { label: "Tags",    value: tagsLabel                       },
                 ].map(({ label, value }) => (
                   <div key={label} className="stitch-card p-4">
                     <dt className="font-mono text-[10px] uppercase tracking-widest text-ink-muted mb-1">{label}</dt>
@@ -680,11 +677,11 @@ export default function ProductDetailPage() {
                 All measurements are in inches. Measure your chest circumference and
                 compare below for the best fit.
               </p>
-              <div className="overflow-x-auto rounded-xl border" style={{ borderColor: "rgba(18,32,58,0.1)" }}>
+              <div className="overflow-x-auto rounded-xl border" style={{ borderColor: "rgba(20,22,27,0.1)" }}>
                 <table className="w-full text-sm border-collapse" aria-label="Size chart">
                   <thead>
                     <tr className="bg-ink text-canvas">
-                      {["Size", "Chest", "Shoulder", "Length"].map((h) => (
+                      {["Size", "Chest", "Length", "Sleeve"].map((h) => (
                         <th
                           key={h}
                           scope="col"
@@ -701,16 +698,16 @@ export default function ProductDetailPage() {
                         key={row.size}
                         className={`transition-colors ${
                           selectedSize === row.size
-                            ? "bg-blue-50"
+                            ? "bg-brand-50"
                             : i % 2 === 0 ? "bg-white" : "bg-canvas"
                         }`}
-                        style={{ borderBottom: "1px solid rgba(18,32,58,0.06)" }}
+                        style={{ borderBottom: "1px solid rgba(20,22,27,0.06)" }}
                         aria-selected={selectedSize === row.size}
                       >
                         <td className="font-mono font-semibold text-sm px-5 py-3 text-ink">
                           {row.size}
                           {selectedSize === row.size && (
-                            <span className="ml-2 text-blue-600 text-[10px]" aria-label="Your selected size">
+                            <span className="ml-2 text-brand-600 text-[10px]" aria-label="Your selected size">
                               ← your size
                             </span>
                           )}

@@ -7,6 +7,9 @@ import { getAuth } from "firebase-admin/auth";
  * Firebase Admin SDK — server-side only.
  * Uses modular v12+ API (firebase-admin/app etc.)
  * Never import this in client components.
+ *
+ * Always uses explicit service account credentials via env vars.
+ * This avoids the ADC "invalid_grant: account not found" error on Cloud Run.
  */
 
 function createAdminApp(): App | null {
@@ -14,18 +17,23 @@ function createAdminApp(): App | null {
     return getApp();
   }
 
-  // Gracefully return null if keys are missing (prevents build crash)
-  if (!process.env.FIREBASE_ADMIN_PRIVATE_KEY) {
-    console.warn("⚠️ FIREBASE_ADMIN_PRIVATE_KEY is missing. Admin SDK is disabled.");
+  const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+  const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+  const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
+
+  if (!privateKey || !clientEmail || !projectId) {
+    console.warn(
+      "⚠️ Firebase Admin SDK is disabled: FIREBASE_ADMIN_PRIVATE_KEY, FIREBASE_ADMIN_CLIENT_EMAIL, or FIREBASE_ADMIN_PROJECT_ID is missing."
+    );
     return null;
   }
 
   return initializeApp({
     credential: cert({
-      projectId:   process.env.FIREBASE_ADMIN_PROJECT_ID!,
-      clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL!,
-      // Replace escaped newlines in env variable
-      privateKey:  process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n")!,
+      projectId,
+      clientEmail,
+      // Handle both escaped (\n) and literal newlines in the private key
+      privateKey: privateKey.replace(/\\n/g, "\n"),
     }),
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
   });

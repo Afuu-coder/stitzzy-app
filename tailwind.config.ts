@@ -10,47 +10,56 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      // ── Stitzzy Brand Colors ──────────────────────────────────────────────
+      // ── Stitzzy Brand Colors (per 01-brand-identity.md) ──────────────────
+      // Navy is the ONLY primary-CTA color. Gold is reserved for trust/status
+      // badges — never a button fill. Warm off-white surfaces, never clinical.
       colors: {
-        // Primary brand blue gradient anchors
+        // Primary brand accent — navy (#1B2A4A = navy-600). The full scale is
+        // navy-anchored so every existing bg-brand-*/text-brand-* usage reskins
+        // to the institutional navy automatically.
         brand: {
-          50:  "#EEF2FF",
-          100: "#E0E7FF",
-          200: "#C7D2FE",
-          300: "#A5B4FC",
-          400: "#818CF8",
-          500: "#6366F1", // primary
-          600: "#4F46E5", // PRD primary
-          700: "#4338CA",
-          800: "#3730A3",
-          900: "#312E81",
+          50:  "#EEF0F5",
+          100: "#E6EAF2", // navy-100 — chip bg, selected-state fill
+          200: "#C7D0E0",
+          300: "#9FADC7",
+          400: "#5A6E93",
+          500: "#2A3D5F",
+          600: "#1B2A4A", // navy-600 — primary CTA, links, active states
+          700: "#16223C",
+          800: "#111A2E",
+          900: "#0C1220",
         },
-        // Sky / accent
+        // Navy semantic aliases
+        navy: {
+          DEFAULT: "#1B2A4A",
+          100:     "#E6EAF2",
+        },
+        // Sky / accent (kept for incidental use)
         sky: {
           400: "#38BDF8",
           500: "#0EA5E9",
         },
         // Ink (dark text system)
         ink: {
-          DEFAULT: "#12203A",
-          muted:   "#5B6478",
-          faint:   "#8896AB",
+          DEFAULT: "#14161B", // ink-900 — body text, logo
+          muted:   "#4A4D57", // ink-600 — secondary text
+          faint:   "#9A9DA8", // ink-300 — muted, placeholders, disabled
         },
-        // Canvas (light backgrounds)
+        // Canvas — warm off-white, not clinical pure white
         canvas: {
-          DEFAULT: "#F4F6FA",
-          2:       "#EAEDF3",
-          white:   "#FFFFFF",
+          DEFAULT: "#FAF9F6", // surface-0 — page bg
+          2:       "#F2F0EA", // warm hairline fill
+          white:   "#FFFFFF", // surface-1 — cards, panels
         },
-        // Brass / gold (eyebrows, live badges, accents)
+        // Brass / gold — verified/premium accent (badges & status only)
         brass: {
-          DEFAULT: "#B8892E",
-          light:   "#D4A853",
+          DEFAULT: "#B8863B", // gold-500
+          light:   "#F5EBDA", // gold-100 — badge backgrounds
         },
-        // Status colors
-        success: "#22C55E",
-        warning: "#F59E0B",
-        danger:  "#C1502E",
+        // Status colors (per brand spec §3.2)
+        success: "#1F7A4D",
+        warning: "#B8863B",
+        danger:  "#B23A3A",
         // WhatsApp green
         whatsapp: "#25D366",
         // shadcn/ui CSS-variable tokens
@@ -107,18 +116,18 @@ const config: Config = {
 
       // ── Shadows ──────────────────────────────────────────────────────────
       boxShadow: {
-        card:    "0 1px 3px rgba(18,32,58,0.08), 0 4px 12px rgba(18,32,58,0.04)",
-        "card-hover": "0 4px 16px rgba(18,32,58,0.12), 0 8px 24px rgba(18,32,58,0.06)",
-        stitch:  "inset 0 0 0 1.5px rgba(18,32,58,0.28)",
-        glow:    "0 0 24px rgba(79,70,229,0.25)",
+        card:    "0 1px 3px rgba(20,22,27,0.06), 0 4px 12px rgba(20,22,27,0.03)",
+        "card-hover": "0 4px 16px rgba(20,22,27,0.10), 0 8px 24px rgba(20,22,27,0.05)",
+        stitch:  "inset 0 0 0 1.5px rgba(27,42,74,0.25)",
+        glow:    "0 0 24px rgba(27,42,74,0.18)",
       },
 
       // ── Gradients via backgroundImage ────────────────────────────────────
       backgroundImage: {
-        "brand-gradient":  "linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%)",
-        "brand-gradient-v": "linear-gradient(180deg, #4F46E5 0%, #3B82F6 100%)",
-        "hero-gradient":   "linear-gradient(135deg, #EEF2FF 0%, #F4F6FA 60%, #E0E7FF 100%)",
-        "dark-gradient":   "linear-gradient(135deg, #0F172A 0%, #12203A 100%)",
+        "brand-gradient":  "linear-gradient(135deg, #1B2A4A 0%, #2A3D5F 100%)",
+        "brand-gradient-v": "linear-gradient(180deg, #1B2A4A 0%, #2A3D5F 100%)",
+        "hero-gradient":   "linear-gradient(135deg, #F5EBDA 0%, #FAF9F6 55%, #E6EAF2 100%)",
+        "dark-gradient":   "linear-gradient(135deg, #0C1220 0%, #1B2A4A 100%)",
       },
 
       // ── Spacing (8px grid) ───────────────────────────────────────────────
@@ -155,6 +164,19 @@ const config: Config = {
           "0%":   { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        // ── Calm brand motion (loading screen + reveals) ──
+        "logo-in": {
+          from: { opacity: "0", transform: "scale(0.92)" },
+          to:   { opacity: "1", transform: "scale(1)" },
+        },
+        "loader-bar": {
+          "0%":   { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
+        "reveal": {
+          from: { opacity: "0", transform: "translateY(12px)" },
+          to:   { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -163,6 +185,9 @@ const config: Config = {
         "fade-in":        "fade-in 0.4s ease-out",
         "slide-up":       "slide-up 0.5s ease-out",
         "shimmer":        "shimmer 2s linear infinite",
+        "logo-in":        "logo-in 0.5s cubic-bezier(0.22,1,0.36,1)",
+        "loader-bar":     "loader-bar 1.1s cubic-bezier(0.65,0,0.35,1) infinite",
+        "reveal":         "reveal 0.45s cubic-bezier(0.22,1,0.36,1)",
       },
     },
   },

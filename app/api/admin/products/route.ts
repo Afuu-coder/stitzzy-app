@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { adminDb, adminStorage } from "@/lib/firebase-admin";
-
-async function verifyAdmin() {
-  const { userId } = await auth();
-  if (!userId) return false;
-  return true;
-}
+import { verifyAdmin } from "@/lib/admin-auth";
 
 export async function POST(request: Request) {
   if (!(await verifyAdmin())) {
@@ -31,7 +25,7 @@ export async function POST(request: Request) {
       } else {
         if (value === "true") data[key] = true;
         else if (value === "false") data[key] = false;
-        else if (!isNaN(Number(value)) && (key === "basePrice" || key === "stock")) {
+        else if (!isNaN(Number(value)) && (key === "price" || key === "mrp")) {
           data[key] = Number(value);
         } else {
           data[key] = value;
@@ -41,10 +35,9 @@ export async function POST(request: Request) {
 
     data.createdAt = new Date().toISOString();
     data.updatedAt = new Date().toISOString();
-    data.imageUrls = [];
-    data.slug = (data.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
-    data.applicableSemesters = [];
-    data.tags = [];
+    data.images = [];
+    data.slug = (data.title || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+    data.tags = Array.isArray(data.tags) ? data.tags : [];
 
     const bucket = adminStorage.bucket();
 
@@ -57,13 +50,13 @@ export async function POST(request: Request) {
         const ext = file.name.split(".").pop();
         const filePath = `products/images/${uniqueId}.${ext}`;
         const storageFile = bucket.file(filePath);
-        
+
         await storageFile.save(buffer, { contentType: file.type });
         return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filePath)}?alt=media`;
       });
 
       const urls = await Promise.all(uploadPromises);
-      data.imageUrls = urls.filter(Boolean);
+      data.images = urls.filter(Boolean);
     }
 
     // Save to Firestore
@@ -144,7 +137,7 @@ export async function PUT(request: Request) {
       } else if (key !== "id") {
         if (value === "true") data[key] = true;
         else if (value === "false") data[key] = false;
-        else if (!isNaN(Number(value)) && (key === "basePrice" || key === "stock")) {
+        else if (!isNaN(Number(value)) && (key === "price" || key === "mrp")) {
           data[key] = Number(value);
         } else {
           data[key] = value;
@@ -153,8 +146,8 @@ export async function PUT(request: Request) {
     });
 
     data.updatedAt = new Date().toISOString();
-    if (data.name) {
-      data.slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+    if (data.title) {
+      data.slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
     }
 
     const bucket = adminStorage.bucket();
@@ -176,9 +169,9 @@ export async function PUT(request: Request) {
       const urls = await Promise.all(uploadPromises);
       const newUrls = urls.filter(Boolean);
       if (newUrls.length > 0) {
-        // If we want to append, we'd need to fetch first. 
+        // If we want to append, we'd need to fetch first.
         // For simplicity, we overwrite images if new ones are uploaded.
-        data.imageUrls = newUrls;
+        data.images = newUrls;
       }
     }
 

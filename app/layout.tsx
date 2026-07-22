@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/shared/navbar";
 import { ConditionalFooter } from "@/components/shared/conditional-footer";
+import { BrandLoader } from "@/components/shared/brand-loader";
 import { Toaster } from "sonner";
 
 const bricolage = Bricolage_Grotesque({
@@ -98,14 +99,15 @@ export default function RootLayout({
           publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
           appearance={{
             variables: {
-              colorPrimary:    "#4F46E5",
-              colorBackground: "#F4F6FA",
+              colorPrimary:    "#1B2A4A",
+              colorBackground: "#FAF9F6",
               borderRadius:    "0.5rem",
               fontFamily:      "Inter, system-ui, sans-serif",
             },
           }}
         >
           <Providers>
+            <BrandLoader />
             <Navbar />
             <main id="main-content">{children}</main>
             <ConditionalFooter />

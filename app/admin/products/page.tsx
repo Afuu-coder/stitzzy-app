@@ -18,15 +18,19 @@ export default function AdminProductsPage() {
 
   // Form State
   const [formData, setFormData] = useState({
-    name: "",
+    title: "",
     sku: "",
-    basePrice: 0,
+    price: 0,
+    mrp: 0,
     stock: 0,
     institutionId: "",
     departmentId: "all", // defaulting to all for now
+    departmentName: "all depts",
     category: "Shirt",
-    gender: "Unisex",
+    gender: "unisex",
     description: "",
+    fabricDetails: "",
+    careInstructions: "",
     isActive: true,
   });
   
@@ -89,8 +93,15 @@ export default function AdminProductsPage() {
     try {
       const form = new FormData();
       Object.entries(formData).forEach(([key, val]) => form.append(key, String(val)));
-      
-      form.append("sizes", JSON.stringify(sizes));
+
+      // Build the schema's sizes: [{ size, stock, sku }] from the selected size
+      // chips, distributing the single stock value and deriving a per-size SKU.
+      const sizeObjects = sizes.map((s) => ({
+        size: s,
+        stock: formData.stock,
+        sku: formData.sku ? `${formData.sku}-${s}` : "",
+      }));
+      form.append("sizes", JSON.stringify(sizeObjects));
       imageFiles.forEach(file => form.append("images", file));
 
       let url = "/api/admin/products";
@@ -110,7 +121,7 @@ export default function AdminProductsPage() {
       toast.success(editId ? "Product updated" : "Product added");
       setIsModalOpen(false);
       setEditId(null);
-      setFormData({ name: "", sku: "", basePrice: 0, stock: 0, institutionId: "", departmentId: "all", category: "Shirt", gender: "Unisex", description: "", isActive: true });
+      setFormData({ title: "", sku: "", price: 0, mrp: 0, stock: 0, institutionId: "", departmentId: "all", departmentName: "all depts", category: "Shirt", gender: "unisex", description: "", fabricDetails: "", careInstructions: "", isActive: true });
       setSizes([]);
       setImageFiles([]);
       setImagePreviews([]);
@@ -184,7 +195,7 @@ export default function AdminProductsPage() {
         <button
           onClick={() => {
             setEditId(null);
-            setFormData({ name: "", sku: "", basePrice: 0, stock: 0, institutionId: "", departmentId: "all", category: "Shirt", gender: "Unisex", description: "", isActive: true });
+            setFormData({ title: "", sku: "", price: 0, mrp: 0, stock: 0, institutionId: "", departmentId: "all", departmentName: "all depts", category: "Shirt", gender: "unisex", description: "", fabricDetails: "", careInstructions: "", isActive: true });
             setSizes([]);
             setImageFiles([]);
             setImagePreviews([]);
@@ -229,10 +240,10 @@ export default function AdminProductsPage() {
                     className="border-b border-ink/5 hover:bg-canvas-2 transition-colors last:border-0"
                   >
                     <td className="px-6 py-4">
-                      {prod.imageUrls?.[0] ? (
+                      {prod.images?.[0] ? (
                         <div className="w-10 h-10 rounded overflow-hidden bg-canvas-2">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={prod.imageUrls[0]} alt="" className="w-full h-full object-cover" />
+                          <img src={prod.images[0]} alt="" className="w-full h-full object-cover" />
                         </div>
                       ) : (
                         <div className="w-10 h-10 rounded bg-canvas-2 flex items-center justify-center">
@@ -242,27 +253,33 @@ export default function AdminProductsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div>
-                        <span className="font-display font-medium text-ink">{prod.name}</span>
-                        {prod.imageUrls?.length > 1 && (
-                          <span className="ml-2 font-mono text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">{prod.imageUrls.length} imgs</span>
+                        <span className="font-display font-medium text-ink">{prod.title}</span>
+                        {prod.images?.length > 1 && (
+                          <span className="ml-2 font-mono text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">{prod.images.length} imgs</span>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs text-ink-muted">{prod.sku}</td>
-                    <td className="px-6 py-4 font-display font-semibold text-ink">₹{prod.basePrice?.toLocaleString("en-IN")}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-ink-muted">{prod.sizes?.[0]?.sku ?? "—"}</td>
+                    <td className="px-6 py-4 font-display font-semibold text-ink">₹{prod.price?.toLocaleString("en-IN")}</td>
                     <td className="px-6 py-4">
-                      {prod.stock !== undefined ? (
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs text-ink-muted">{prod.stock} left</span>
-                          {prod.stock < 10 && (
-                            <span className="font-mono text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-red-50 text-red-600">
-                              Low Stock
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="font-mono text-xs text-ink-muted">N/A</span>
-                      )}
+                      {(() => {
+                        const totalStock = Array.isArray(prod.sizes)
+                          ? prod.sizes.reduce((sum: number, s: { stock?: number }) => sum + (s.stock ?? 0), 0)
+                          : undefined;
+                        if (totalStock === undefined) {
+                          return <span className="font-mono text-xs text-ink-muted">N/A</span>;
+                        }
+                        return (
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs text-ink-muted">{totalStock} left</span>
+                            {totalStock < 10 && (
+                              <span className="font-mono text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-red-50 text-red-600">
+                                Low Stock
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-6 py-4">
                       <button 
@@ -290,30 +307,34 @@ export default function AdminProductsPage() {
                           onClick={() => {
                             setEditId(prod.id);
                             setFormData({
-                              name: prod.name || "",
-                              sku: prod.sku || "",
-                              basePrice: prod.basePrice || 0,
-                              stock: prod.stock || 0,
+                              title: prod.title || "",
+                              sku: prod.sizes?.[0]?.sku?.replace(/-[^-]*$/, "") || "",
+                              price: prod.price || 0,
+                              mrp: prod.mrp || 0,
+                              stock: prod.sizes?.[0]?.stock || 0,
                               institutionId: prod.institutionId || "",
                               departmentId: prod.departmentId || "all",
+                              departmentName: prod.departmentName || "all depts",
                               category: prod.category || "Shirt",
-                              gender: prod.gender || "Unisex",
+                              gender: prod.gender || "unisex",
                               description: prod.description || "",
+                              fabricDetails: prod.fabricDetails || "",
+                              careInstructions: prod.careInstructions || "",
                               isActive: prod.isActive ?? true,
                             });
-                            setSizes(prod.sizes || []);
+                            setSizes(Array.isArray(prod.sizes) ? prod.sizes.map((s: { size: string }) => s.size) : []);
                             setImageFiles([]);
-                            setImagePreviews(prod.imageUrls || []);
+                            setImagePreviews(prod.images || []);
                             setIsModalOpen(true);
                           }}
-                          aria-label={`Edit ${prod.name}`}
+                          aria-label={`Edit ${prod.title}`}
                           className="p-1.5 text-ink-muted hover:text-blue-600 transition-colors"
                         >
                           <Edit2 size={14} aria-hidden="true" />
                         </button>
                         <button
-                          onClick={() => handleDelete(prod.id, prod.name)}
-                          aria-label={`Delete ${prod.name}${deletingId === prod.id ? " — click again to confirm" : ""}`}
+                          onClick={() => handleDelete(prod.id, prod.title)}
+                          aria-label={`Delete ${prod.title}${deletingId === prod.id ? " — click again to confirm" : ""}`}
                           className={`p-1.5 transition-colors ${deletingId === prod.id ? 'text-red-600' : 'text-ink-muted hover:text-red-600'}`}
                         >
                           <Trash2 size={14} aria-hidden="true" />
@@ -395,12 +416,12 @@ export default function AdminProductsPage() {
 
                   <div>
                     <label className="block font-mono text-xs uppercase tracking-widest text-ink-muted mb-1.5">Product Name</label>
-                  <input 
-                    required 
+                  <input
+                    required
                     type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full bg-canvas border border-ink/10 rounded-lg px-4 py-2.5 text-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" 
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="w-full bg-canvas border border-ink/10 rounded-lg px-4 py-2.5 text-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                     placeholder="e.g. B.Sc Formal Shirt"
                   />
                 </div>
@@ -433,28 +454,40 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="block font-mono text-xs uppercase tracking-widest text-ink-muted mb-1.5">Base Price (₹)</label>
-                    <input 
-                      required 
+                    <label className="block font-mono text-xs uppercase tracking-widest text-ink-muted mb-1.5">Price (₹)</label>
+                    <input
+                      required
                       type="number"
                       min="0"
-                      value={formData.basePrice || ""}
-                      onChange={(e) => setFormData({ ...formData, basePrice: parseFloat(e.target.value) || 0 })}
-                      className="w-full bg-canvas border border-ink/10 rounded-lg px-4 py-2.5 text-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" 
-                      placeholder="649"
+                      value={formData.price || ""}
+                      onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-canvas border border-ink/10 rounded-lg px-4 py-2.5 text-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      placeholder="549"
                     />
                   </div>
                   <div>
-                    <label className="block font-mono text-xs uppercase tracking-widest text-ink-muted mb-1.5">Initial Stock</label>
-                    <input 
-                      required 
+                    <label className="block font-mono text-xs uppercase tracking-widest text-ink-muted mb-1.5">MRP (₹)</label>
+                    <input
+                      required
+                      type="number"
+                      min="0"
+                      value={formData.mrp || ""}
+                      onChange={(e) => setFormData({ ...formData, mrp: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-canvas border border-ink/10 rounded-lg px-4 py-2.5 text-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      placeholder="699"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-mono text-xs uppercase tracking-widest text-ink-muted mb-1.5">Stock / size</label>
+                    <input
+                      required
                       type="number"
                       min="0"
                       value={formData.stock || ""}
                       onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
-                      className="w-full bg-canvas border border-ink/10 rounded-lg px-4 py-2.5 text-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" 
+                      className="w-full bg-canvas border border-ink/10 rounded-lg px-4 py-2.5 text-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                       placeholder="50"
                     />
                   </div>
@@ -469,11 +502,11 @@ export default function AdminProductsPage() {
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       className="w-full bg-canvas border border-ink/10 rounded-lg px-4 py-2.5 text-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                     >
-                      <option value="Shirt">Shirt</option>
-                      <option value="Pant">Pant</option>
-                      <option value="Blazer">Blazer</option>
-                      <option value="T-Shirt">T-Shirt</option>
-                      <option value="Accessories">Accessories</option>
+                      <option value="shirt">Shirt</option>
+                      <option value="pants">Pants</option>
+                      <option value="blazer">Blazer</option>
+                      <option value="tshirt">T-Shirt</option>
+                      <option value="accessories">Accessories</option>
                     </select>
                   </div>
                   <div>
@@ -484,9 +517,9 @@ export default function AdminProductsPage() {
                       onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                       className="w-full bg-canvas border border-ink/10 rounded-lg px-4 py-2.5 text-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                     >
-                      <option value="Unisex">Unisex</option>
-                      <option value="Men">Men</option>
-                      <option value="Women">Women</option>
+                      <option value="unisex">Unisex</option>
+                      <option value="men">Men</option>
+                      <option value="women">Women</option>
                     </select>
                   </div>
                 </div>
@@ -512,13 +545,36 @@ export default function AdminProductsPage() {
 
                 <div>
                   <label className="block font-mono text-xs uppercase tracking-widest text-ink-muted mb-1.5">Description</label>
-                  <textarea 
+                  <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={3}
-                    className="w-full bg-canvas border border-ink/10 rounded-lg px-4 py-2.5 text-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none" 
+                    className="w-full bg-canvas border border-ink/10 rounded-lg px-4 py-2.5 text-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
                     placeholder="Product details, fabric, and fit..."
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-mono text-xs uppercase tracking-widest text-ink-muted mb-1.5">Fabric Details</label>
+                    <input
+                      type="text"
+                      value={formData.fabricDetails}
+                      onChange={(e) => setFormData({ ...formData, fabricDetails: e.target.value })}
+                      className="w-full bg-canvas border border-ink/10 rounded-lg px-4 py-2.5 text-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      placeholder="e.g. 100% cotton, 180 GSM"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-mono text-xs uppercase tracking-widest text-ink-muted mb-1.5">Care Instructions</label>
+                    <input
+                      type="text"
+                      value={formData.careInstructions}
+                      onChange={(e) => setFormData({ ...formData, careInstructions: e.target.value })}
+                      className="w-full bg-canvas border border-ink/10 rounded-lg px-4 py-2.5 text-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      placeholder="e.g. Machine wash cold"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 pt-2">

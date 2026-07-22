@@ -9,6 +9,7 @@ export interface Institution {
   city?:     string;
   state?:    string;
   isActive:  boolean;
+  isFeatured?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -31,47 +32,46 @@ export interface Course {
 }
 
 // ── Product Catalog ──────────────────────────────────────────────────────
+/** The customer's gender, captured on the checkout form. */
 export type Gender = "male" | "female" | "unisex";
 
+/** Product-level fit. Distinct from the customer's gender at checkout. */
+export type ProductGender = "men" | "women" | "unisex";
+
+/** One selectable size with its own stock and SKU (per products schema). */
+export interface ProductSize {
+  size:  string;   // "S", "M", "32", "34" …
+  stock: number;
+  sku:   string;
+}
+
 export interface Product {
-  id:                  string;
-  institutionId:       string;
-  departmentId?:       string;
-  courseId?:           string;
-  categoryId?:         string;
-  name:                string;
-  slug:                string;
-  description?:        string;
-  gender:              Gender;
-  applicableSemesters: number[];
-  sku:                 string;
-  basePrice:           number;
-  discountPrice?:      number;
-  tags:                string[];
-  isActive:            boolean;
-  createdAt:           string;
-  updatedAt:           string;
-  // Denormalized for display (populated client-side)
-  images?:    ProductImage[];
-  variants?:  ProductVariant[];
-  imageUrls?: string[];
-  sizes?:     string[];
-  category?:  string;
-}
-
-export interface ProductImage {
-  id:        string;
-  productId: string;
-  url:       string;
-  sortOrder: number;
-}
-
-export interface ProductVariant {
-  id:                string;
-  productId:         string;
-  size:              string;  // S, M, L, XL, XXL, 32, 34 etc.
-  stockQuantity:     number;
-  lowStockThreshold: number;
+  id:              string;
+  slug:            string;              // "duiet-cse-formal-shirt"
+  institutionId:   string;
+  institutionName: string;              // denormalized for card/list display
+  departmentId?:   string;
+  departmentName?: string;              // e.g. "CSE dept" / "all depts"
+  category:        string;              // "shirt" | "pants" | "blazer" … drives size chart
+  gender:          ProductGender;
+  title:           string;
+  description?:       string;
+  fabricDetails?:     string;
+  careInstructions?:  string;
+  images:          string[];            // Storage URLs, first = card thumbnail
+  price:           number;
+  mrp:             number;
+  discountPercent?: number;             // denormalized; derive from mrp/price if absent
+  sizes:           ProductSize[];
+  tags:            string[];
+  ratingAvg?:      number;
+  ratingCount?:    number;
+  isVerified?:     boolean;
+  isActive:        boolean;
+  isFeatured?:     boolean;
+  status?:         "draft" | "active" | "archived";
+  createdAt:       string;
+  updatedAt:       string;
 }
 
 // ── Cart ─────────────────────────────────────────────────────────────────
@@ -183,6 +183,7 @@ export interface CheckoutFormData {
   city:        string;
   state:       string;
   pincode:     string;
+  institution: string;
   notes?:      string;
   department:  string;
   semester:    number;

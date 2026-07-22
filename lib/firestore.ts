@@ -67,7 +67,7 @@ export async function getProductsByDept(
   );
   const snap = await getDocs(q);
   const data = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
-  return data.sort((a, b) => a.name.localeCompare(b.name));
+  return data.sort((a, b) => a.title.localeCompare(b.title));
 }
 
 // ── All products for an institution ────────────────────────
@@ -81,7 +81,7 @@ export async function getProductsByInstitution(
   );
   const snap = await getDocs(q);
   const data = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
-  return data.sort((a, b) => a.name.localeCompare(b.name));
+  return data.sort((a, b) => a.title.localeCompare(b.title));
 }
 
 // ── Single product by ID ─────────────────────────────────────

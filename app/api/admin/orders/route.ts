@@ -1,11 +1,32 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { adminDb } from "@/lib/firebase-admin";
+import { verifyAdmin } from "@/lib/admin-auth";
 
-async function verifyAdmin() {
-  const { userId } = await auth();
-  if (!userId) return false;
-  return true;
+/**
+ * GET /api/admin/orders?limit=500 — list orders for the admin dashboard.
+ * Admin-only; reads go through the Admin SDK so Firestore rules stay locked.
+ */
+export async function GET(request: Request) {
+  if (!(await verifyAdmin())) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const max = Math.min(Number(searchParams.get("limit") ?? 500) || 500, 1000);
+
+    const snap = await adminDb
+      .collection("orders")
+      .orderBy("createdAt", "desc")
+      .limit(max)
+      .get();
+
+    const orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return NextResponse.json({ orders });
+  } catch (error: any) {
+    console.error("Admin API Error:", error);
+    return new NextResponse(error.message || "Internal Server Error", { status: 500 });
+  }
 }
 
 export async function PATCH(request: Request) {

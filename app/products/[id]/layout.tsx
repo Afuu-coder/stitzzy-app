@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://stitzzy.com";
 
+// ISR: regenerate this segment's metadata at most once per hour
+export const revalidate = 3600;
+
 export async function generateMetadata({
   params,
 }: {
@@ -29,10 +32,10 @@ export async function generateMetadata({
     }
 
     const p        = snap.data()!;
-    const name     = p.name as string;
+    const name     = p.title as string;
     const category = (p.category as string) ?? "Uniform";
-    const price    = (p.discountPrice ?? p.basePrice) as number;
-    const images   = (p.imageUrls as string[]) ?? [];
+    const price    = p.price as number;
+    const images   = (p.images as string[]) ?? [];
 
     return {
       title: `${name} — Official ${category}`,

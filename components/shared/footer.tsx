@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import { MessageCircle, Mail, Check } from "lucide-react";
-import { collection, addDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 /* ── Inline SVG social icons ──────────────────────────────────────── */
 function InstagramIcon({ size = 15 }: { size?: number }) {
@@ -38,21 +36,25 @@ const FOOTER_LINKS: Record<string, FooterLink[]> = {
   Product: [
     { href: "/uniforms",     label: "Browse uniforms" },
     { href: "/institutions", label: "Institutions" },
-    { href: "/#how",         label: "How it works" },
+    { href: "/how-it-works", label: "How it works" },
     { href: "/cart",         label: "Your cart" },
   ],
   Company: [
-    { href: "/#how",  label: "How it works" },
-    { href: "/#faq",  label: "FAQ" },
+    { href: "/about",         label: "About" },
+    { href: "/how-it-works",  label: "How it works" },
+    { href: "/faq",           label: "FAQ" },
+    { href: "/contact",       label: "Contact" },
   ],
   Support: [
     { href: "https://wa.me/918473083827", label: "WhatsApp support", external: true },
+    { href: "/track",                     label: "Track order" },
+    { href: "/size-guide",                label: "Size guide" },
     { href: "/account",                   label: "My Account" },
   ],
   Legal: [
-    { href: "#", label: "Privacy policy" },
-    { href: "#", label: "Terms of service" },
-    { href: "#", label: "Refund policy" },
+    { href: "/privacy",       label: "Privacy policy" },
+    { href: "/terms",         label: "Terms of service" },
+    { href: "/refund-policy", label: "Refund policy" },
   ],
 };
 
@@ -76,10 +78,10 @@ export function Footer() {
     if (!email.trim() || subscribing) return;
     setSubscribing(true);
     try {
-      await addDoc(collection(db, "subscribers"), {
-        email:        email.trim().toLowerCase(),
-        subscribedAt: new Date().toISOString(),
-        source:       "footer",
+      await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), source: "footer" }),
       });
     } catch {
       // Silently succeed — user still gets confirmation
@@ -236,8 +238,8 @@ export function Footer() {
         >
           <span>© {year} Stitzzy · Stitching the future · Made with ♥ in Assam, India</span>
           <div className="flex gap-6">
-            <Link href="#" className="hover:text-white transition-colors" style={{ color: "rgba(244,246,250,0.5)" }}>Privacy</Link>
-            <Link href="#" className="hover:text-white transition-colors" style={{ color: "rgba(244,246,250,0.5)" }}>Terms</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors" style={{ color: "rgba(244,246,250,0.5)" }}>Privacy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors" style={{ color: "rgba(244,246,250,0.5)" }}>Terms</Link>
             <a href="https://wa.me/918473083827" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors" style={{ color: "rgba(244,246,250,0.5)" }}>Support</a>
           </div>
         </div>

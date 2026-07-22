@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://stitzzy.com";
 
+// ISR: regenerate this segment's metadata at most once per hour
+export const revalidate = 3600;
+
 export async function generateMetadata({
   params,
 }: {
