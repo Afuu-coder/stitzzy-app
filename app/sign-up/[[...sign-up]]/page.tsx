@@ -12,6 +12,9 @@ export default function SignUpPage() {
           <p className="eyebrow mt-1">Create your account</p>
         </div>
         <SignUp
+          // Respect ?redirect_url=… ; otherwise land on the homepage.
+          fallbackRedirectUrl="/"
+          signInUrl="/sign-in"
           appearance={{
             elements: {
               rootBox:    "w-full",

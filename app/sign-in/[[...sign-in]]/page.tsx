@@ -12,6 +12,10 @@ export default function SignInPage() {
           <p className="eyebrow mt-1">Stitching the Future</p>
         </div>
         <SignIn
+          // Respect ?redirect_url=… (e.g. coming from /admin or /checkout);
+          // otherwise land on the homepage.
+          fallbackRedirectUrl="/"
+          signUpUrl="/sign-up"
           appearance={{
             elements: {
               rootBox:    "w-full",
