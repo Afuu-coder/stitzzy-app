@@ -11,7 +11,28 @@ const isProtectedRoute = createRouteMatcher([
 // Admin routes — require admin role
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 
+// The one canonical public domain. Clerk's production key is locked to it, so
+// any other host (Firebase's default *.web.app / *.firebaseapp.com, or the raw
+// App Hosting *.hosted.app URL) must be redirected here — otherwise auth won't
+// load and we'd serve duplicate content under multiple domains (bad for SEO).
+const CANONICAL_HOST = "stitzzy.in";
+const REDIRECT_HOSTS = new Set([
+  "stitzzy.web.app",
+  "stitzzy.firebaseapp.com",
+  "stitzzy-app--stitzzy.us-central1.hosted.app",
+]);
+
 export default clerkMiddleware(async (auth, req) => {
+  // ── Canonical-domain redirect (runs before anything else) ──────────────
+  // Use the forwarded host — that's the real public host the browser used.
+  const host = (req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "")
+    .split(":")[0]
+    .toLowerCase();
+  if (REDIRECT_HOSTS.has(host)) {
+    const url = new URL(req.nextUrl.pathname + req.nextUrl.search, `https://${CANONICAL_HOST}`);
+    return NextResponse.redirect(url, 308); // 308 = permanent, preserves method
+  }
+
   // Protect account & checkout routes
   if (isProtectedRoute(req)) {
     await auth.protect();
